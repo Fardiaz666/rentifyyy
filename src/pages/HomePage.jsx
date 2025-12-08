@@ -1,28 +1,27 @@
 import React, { useContext } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { CartContext } from '../context/CartContext'; // Import Context
+import { CartContext } from '../context/CartContext';
 import HeroSection from '../components/HeroSection';
 import CategoriesSection from '../components/CategoriesSection';
 import ProductCard from '../components/ProductCard';
 import ValuePropSection from '../components/ValuePropSection';
 import OwnerCTA from '../components/OwnerCTA';
 import Footer from '../components/Footer';
-// HAPUS: import { mockProducts } from '../data/mockData';
 import { motion } from 'framer-motion';
 
-// Menerima prop 'isLoggedIn' dari App.jsx
+// Menerima prop 'onPageChange', 'onProductClick', dan 'isLoggedIn' dari App.jsx
 const HomePage = ({ onPageChange, onProductClick, isLoggedIn }) => {
-    // AMBIL DATA GLOBAL: allProducts
-    const { addToCart, allProducts } = useContext(CartContext);
+    // Ambil data produk global dari Context
+    const { allProducts, addToCart } = useContext(CartContext);
 
-    // Filter 6 produk pertama dari daftar produk global
+    // Ambil 6 produk pertama untuk ditampilkan di Home sebagai "Trending"
     const featuredProducts = allProducts.slice(0, 6);
 
-
-    // Fungsi khusus saat Kategori diklik
-    const handleCategoryClick = (slug) => {
-        console.log("Kategori diklik:", slug);
-        onPageChange('products');
+    // Fungsi saat Kategori diklik
+    const handleCategoryClick = (categoryName) => {
+        console.log("Kategori diklik:", categoryName);
+        // Arahkan ke halaman 'products' (Katalog) DAN kirim nama kategori sebagai kata kunci pencarian
+        onPageChange('products', categoryName);
     };
 
     // Variabel animasi untuk efek muncul satu per satu (stagger)
@@ -31,7 +30,7 @@ const HomePage = ({ onPageChange, onProductClick, isLoggedIn }) => {
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.1
+                staggerChildren: 0.1 // Jeda 0.1 detik antar item
             }
         }
     };
@@ -47,16 +46,20 @@ const HomePage = ({ onPageChange, onProductClick, isLoggedIn }) => {
 
     return (
         <motion.div 
+            // Animasi Halaman Masuk/Keluar
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-white font-sans text-slate-800 selection:bg-[#14e9ff] selection:text-slate-900"
         >
+            {/* Bagian Hero (Search Bar Fungsional) */}
             <HeroSection onPageChange={onPageChange} /> 
             
+            {/* Bagian Kategori - Sekarang Interaktif! */}
             <CategoriesSection onCategoryClick={handleCategoryClick} />
             
+            {/* Bagian Produk Trending */}
             <section className="py-20 container mx-auto px-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
                     <motion.div 
@@ -70,8 +73,9 @@ const HomePage = ({ onPageChange, onProductClick, isLoggedIn }) => {
                         <p className="text-slate-500 mt-2">Barang-barang paling dicari minggu ini di Jabodetabek.</p>
                     </motion.div>
                     
+                    {/* Tombol ke Halaman Katalog (All Products) */}
                     <motion.button 
-                        onClick={() => onPageChange('products')}
+                        onClick={() => onPageChange('products')} // Navigasi ke halaman 'products'
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-2 text-slate-900 border border-slate-200 px-6 py-2.5 rounded-full font-bold hover:bg-slate-50 transition text-sm cursor-pointer"
@@ -80,26 +84,28 @@ const HomePage = ({ onPageChange, onProductClick, isLoggedIn }) => {
                     </motion.button>
                 </div>
 
+                {/* Grid Produk dengan Animasi Stagger */}
                 <motion.div 
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
+                    viewport={{ once: true, margin: "-100px" }} // Animasi jalan saat user scroll mendekati elemen
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8"
                 >
-                    {/* Menggunakan featuredProducts dari state global */}
-                    {featuredProducts.map((product) => ( 
+                    {/* Menggunakan featuredProducts yang diambil dari Context */}
+                    {featuredProducts.map((product) => (
                         <motion.div key={product.id} variants={itemVariants}>
                             <ProductCard 
                                 product={product} 
                                 addToCart={addToCart} 
-                                onClick={onProductClick}
+                                onClick={onProductClick} // Klik produk ke detail
                             />
                         </motion.div>
                     ))}
                 </motion.div>
             </section>
 
+            {/* Animasi scroll sederhana untuk section lain */}
             <motion.div 
                 initial={{ opacity: 0, y: 50 }} 
                 whileInView={{ opacity: 1, y: 0 }} 
@@ -115,6 +121,7 @@ const HomePage = ({ onPageChange, onProductClick, isLoggedIn }) => {
                 viewport={{ once: true }} 
                 transition={{ duration: 0.6 }}
             >
+                {/* PENTING: Kirim status isLoggedIn ke OwnerCTA agar tombolnya pintar */}
                 <OwnerCTA onPageChange={onPageChange} isLoggedIn={isLoggedIn} /> 
             </motion.div>
             
