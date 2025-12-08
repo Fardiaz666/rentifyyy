@@ -1,6 +1,6 @@
-import React, { useContext, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Lock, Truck, CreditCard, CheckCircle, Store, ChevronRight, QrCode, Wallet, Copy, Clock } from 'lucide-react';
+import React, { useContext, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Lock, Truck, CreditCard, CheckCircle, Store, ChevronRight, QrCode, Wallet, Copy, Clock, Calendar } from 'lucide-react';
 import { CartContext } from '../context/CartContext';
 import { formatCurrency } from '../utils/currency';
 
@@ -20,79 +20,95 @@ const WALLETS = [
 ];
 
 const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
-    // Ambil 'addOrder' dari context untuk menyimpan pesanan
-    const { cart, totalPrice, addOrder } = useContext(CartContext);
+    const { cart, totalPrice: baseTotalPrice, addOrder } = useContext(CartContext);
     
-    // State Halaman: 'details' (isi form) -> 'payment' (instruksi bayar)
     const [step, setStep] = useState('details'); 
-    
-    // State Form & Pilihan User
     const [isProcessing, setIsProcessing] = useState(false);
-    const [paymentCategory, setPaymentCategory] = useState('bca'); // bca, qris, ewallet
+    
+    // --- STATE DURASI SEWA ---
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [duration, setDuration] = useState(1); // Default 1 hari
+
+    // --- STATE PEMBAYARAN & PENGIRIMAN ---
+    const [paymentCategory, setPaymentCategory] = useState('bca'); 
     const [selectedBank, setSelectedBank] = useState(BANKS[0]);
     const [selectedWallet, setSelectedWallet] = useState(WALLETS[0]);
     const [shippingMethod, setShippingMethod] = useState('instant');
 
-    // Data Dummy untuk Pembayaran
     const [virtualNumber, setVirtualNumber] = useState('');
     const [orderId] = useState(`ORD-${Math.floor(Math.random() * 1000000)}`);
 
-    // Kalkulasi Biaya
+    // --- KALKULASI DURASI OTOMATIS ---
+    useEffect(() => {
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = end - start;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            // Minimal sewa 1 hari
+            if (diffDays > 0) {
+                setDuration(diffDays);
+            } else {
+                setDuration(1); // Jika tanggal sama atau mundur, anggap 1 hari
+            }
+        }
+    }, [startDate, endDate]);
+
+    // --- KALKULASI BIAYA ---
     const serviceFee = 2000;
     const shippingCost = shippingMethod === 'instant' ? 15000 : 0;
-    const grandTotal = totalPrice + shippingCost + serviceFee;
+    // Total Harga Barang = Harga Harian * Durasi
+    const totalItemPrice = baseTotalPrice * duration;
+    const grandTotal = totalItemPrice + shippingCost + serviceFee;
 
-    // 1. Handle tombol "Bayar Sekarang"
     const handleCheckout = (e) => {
         e.preventDefault();
-        setIsProcessing(true);
         
-        // Simulasi loading ke server
+        if (!startDate || !endDate) {
+            alert("Mohon pilih tanggal mulai dan selesai sewa.");
+            return;
+        }
+
+        setIsProcessing(true);
         setTimeout(() => {
             setIsProcessing(false);
-            // Generate nomor VA acak
             setVirtualNumber(`88${Math.floor(Math.random() * 10000000000)}`);
-            // Pindah ke halaman instruksi pembayaran
             setStep('payment'); 
             window.scrollTo(0, 0);
         }, 1500);
     };
 
-    // 2. Handle tombol "Saya Sudah Bayar"
     const handleFinishPayment = () => {
         setIsProcessing(true);
         
-        // Buat Objek Pesanan Baru
         const newOrder = {
             id: orderId,
             date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-            items: [...cart], // Simpan item yang ada di keranjang sekarang
+            items: [...cart],
             total: grandTotal,
             status: 'Menunggu Pengiriman',
             shipping: shippingMethod === 'instant' ? 'Kurir Instan' : 'Ambil Sendiri',
-            paymentMethod: paymentCategory === 'qris' ? 'QRIS' : (paymentCategory === 'bca' ? selectedBank.name : selectedWallet.name)
+            paymentMethod: paymentCategory === 'qris' ? 'QRIS' : (paymentCategory === 'bca' ? selectedBank.name : selectedWallet.name),
+            duration: duration, // Simpan durasi
+            startDate: startDate,
+            endDate: endDate
         };
 
         setTimeout(() => {
             setIsProcessing(false);
-            
-            // Simpan ke Riwayat Pesanan (Context)
             addOrder(newOrder); 
-            
             alert("Pembayaran Terkonfirmasi! Pesanan Anda sedang diproses.");
-            
-            // Pindah ke halaman Riwayat Pesanan (lewat prop dari App.jsx)
             onPaymentSuccess(); 
         }, 2000);
     };
 
-    // Helper Copy text
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
         alert('Disalin ke clipboard!');
     };
 
-    // Jika keranjang kosong (user refresh di halaman ini)
     if (cart.length === 0 && step === 'details') {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-500 font-sans p-6 text-center">
@@ -115,10 +131,7 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
             <div className="border-b border-slate-100 sticky top-0 bg-white/90 backdrop-blur-md z-40">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button 
-                            onClick={onBack} 
-                            className="p-2 hover:bg-slate-50 rounded-full transition text-slate-500 hover:text-slate-800"
-                        >
+                        <button onClick={onBack} className="p-2 hover:bg-slate-50 rounded-full transition text-slate-500 hover:text-slate-800">
                             <ArrowLeft size={20} />
                         </button>
                         <h1 className="text-lg md:text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -126,7 +139,6 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                             {step === 'details' ? 'Checkout Aman' : 'Menunggu Pembayaran'}
                         </h1>
                     </div>
-                    {/* Stepper (Indikator Langkah) */}
                     <div className="hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
                         <span className={step === 'details' ? "text-[#14e9ff]" : "text-slate-900"}>1. Pengiriman</span>
                         <ChevronRight size={14} className="text-slate-300" />
@@ -139,14 +151,13 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
 
             <div className="container mx-auto px-6 py-8 md:py-12">
                 
-                {/* === TAMPILAN 1: FORM DATA (Checkout) === */}
                 {step === 'details' && (
                     <form onSubmit={handleCheckout} className="grid lg:grid-cols-12 gap-12 items-start">
                         
                         {/* Kiri: Input Data */}
                         <div className="lg:col-span-7 space-y-10">
                             
-                            {/* Section Pengiriman */}
+                            {/* 1. INFORMASI PENGIRIMAN */}
                             <section>
                                 <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
                                     <span className="w-8 h-8 rounded-full bg-slate-900 text-[#14e9ff] flex items-center justify-center text-sm font-bold">1</span>
@@ -154,28 +165,61 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                 </h2>
                                 <div className="space-y-5">
                                     <div className="grid grid-cols-2 gap-5">
+                                        <input type="text" placeholder="Nama Depan" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] outline-none" required />
+                                        <input type="text" placeholder="Nama Belakang" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] outline-none" required />
+                                    </div>
+                                    <input type="text" placeholder="Alamat Lengkap" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] outline-none" required />
+                                    <input type="tel" placeholder="Nomor WhatsApp" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] outline-none" required />
+                                </div>
+                            </section>
+
+                            {/* 2. DURASI SEWA (FITUR BARU) */}
+                            <section className="pt-8 border-t border-slate-100">
+                                <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-slate-900 text-[#14e9ff] flex items-center justify-center text-sm font-bold">2</span>
+                                    Durasi Sewa
+                                </h2>
+                                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                    <div className="grid grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Nama Depan</label>
-                                            <input type="text" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] focus:ring-2 focus:ring-[#14e9ff]/20 transition outline-none font-medium" required />
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tanggal Mulai</label>
+                                            <input 
+                                                type="date" 
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                                className="w-full p-3 border border-slate-200 rounded-xl focus:border-[#14e9ff] outline-none bg-white font-medium"
+                                                required 
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Nama Belakang</label>
-                                            <input type="text" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] focus:ring-2 focus:ring-[#14e9ff]/20 transition outline-none font-medium" required />
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tanggal Selesai</label>
+                                            <input 
+                                                type="date" 
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.target.value)}
+                                                className="w-full p-3 border border-slate-200 rounded-xl focus:border-[#14e9ff] outline-none bg-white font-medium"
+                                                required 
+                                            />
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Alamat Lengkap</label>
-                                        <input type="text" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] focus:ring-2 focus:ring-[#14e9ff]/20 transition outline-none font-medium" placeholder="Nama Jalan, No. Rumah, Apartemen, Blok" required />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Nomor WhatsApp</label>
-                                        <input type="tel" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#14e9ff] focus:ring-2 focus:ring-[#14e9ff]/20 transition outline-none font-medium" placeholder="08xxxxxxxxxx" required />
+                                    <div className="mt-4 flex items-center gap-2 text-sm text-slate-600 bg-white p-3 rounded-lg border border-slate-100">
+                                        <Clock size={16} className="text-[#14e9ff]" />
+                                        <span>Total Durasi Sewa: <b className="text-slate-900">{duration} Hari</b></span>
                                     </div>
                                 </div>
+                            </section>
 
-                                <div className="mt-8 pt-8 border-t border-slate-100">
+                            {/* 3. METODE PENGIRIMAN & PEMBAYARAN */}
+                            <section className="pt-8 border-t border-slate-100">
+                                <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-slate-900 text-[#14e9ff] flex items-center justify-center text-sm font-bold">3</span>
+                                    Pengiriman & Pembayaran
+                                </h2>
+                                
+                                {/* Pengiriman */}
+                                <div className="mb-8">
                                     <h3 className="font-bold text-sm text-slate-900 mb-4 flex items-center gap-2">
-                                        <Truck size={18} /> Pilih Metode Pengiriman
+                                        <Truck size={18} /> Metode Pengiriman
                                     </h3>
                                     <div className="space-y-3">
                                         <label 
@@ -206,16 +250,8 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                         </label>
                                     </div>
                                 </div>
-                            </section>
 
-                            {/* Section Pembayaran */}
-                            <section className="pt-8 border-t border-slate-100">
-                                <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
-                                    <span className="w-8 h-8 rounded-full bg-slate-900 text-[#14e9ff] flex items-center justify-center text-sm font-bold">2</span>
-                                    Metode Pembayaran
-                                </h2>
-
-                                {/* Tab Kategori Pembayaran */}
+                                {/* Pembayaran Tabs */}
                                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
                                     <button type="button" onClick={() => setPaymentCategory('bca')} className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap border transition ${paymentCategory === 'bca' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
                                         <CreditCard size={18} /> Transfer Bank
@@ -228,13 +264,9 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                     </button>
                                 </div>
 
-                                {/* Content Pilihan Detail */}
                                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
-                                    
-                                    {/* 1. Transfer Bank */}
                                     {paymentCategory === 'bca' && (
                                         <div className="space-y-3">
-                                            <p className="text-xs font-bold text-slate-400 uppercase mb-3">Pilih Bank</p>
                                             {BANKS.map((bank) => (
                                                 <label key={bank.id} onClick={() => setSelectedBank(bank)} className={`flex items-center justify-between p-4 bg-white border rounded-xl cursor-pointer transition ${selectedBank.id === bank.id ? 'border-[#14e9ff] ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}>
                                                     <div className="flex items-center gap-4">
@@ -248,8 +280,6 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                             ))}
                                         </div>
                                     )}
-
-                                    {/* 2. QRIS */}
                                     {paymentCategory === 'qris' && (
                                         <div className="text-center py-4">
                                             <div className="inline-block bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-4">
@@ -262,11 +292,8 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                             <p className="text-xs text-slate-500 mt-1">GoPay, OVO, Dana, ShopeePay, BCA Mobile, dll.</p>
                                         </div>
                                     )}
-
-                                    {/* 3. E-Wallet */}
                                     {paymentCategory === 'ewallet' && (
                                         <div className="space-y-3">
-                                            <p className="text-xs font-bold text-slate-400 uppercase mb-3">Pilih E-Wallet</p>
                                             {WALLETS.map((wallet) => (
                                                 <label key={wallet.id} onClick={() => setSelectedWallet(wallet)} className={`flex items-center justify-between p-4 bg-white border rounded-xl cursor-pointer transition ${selectedWallet.id === wallet.id ? 'border-[#14e9ff] ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}>
                                                     <div className="flex items-center gap-4">
@@ -297,16 +324,25 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                             <img src={item.imageUrl} className="w-14 h-14 rounded-lg bg-white object-cover border border-slate-100" alt="" />
                                             <div className="flex-1">
                                                 <p className="text-sm font-bold text-slate-800 line-clamp-1">{item.name}</p>
-                                                <p className="text-xs text-slate-500">{formatCurrency(item.pricePerDay)} / hari</p>
+                                                {/* Tampilkan durasi sewa di ringkasan */}
+                                                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                                    <Calendar size={12} /> {duration} Hari
+                                                </p>
+                                                <p className="text-xs text-slate-400 mt-0.5">
+                                                    {formatCurrency(item.pricePerDay)} x {duration}
+                                                </p>
                                             </div>
+                                            <p className="text-sm font-bold text-slate-900">
+                                                {formatCurrency(item.pricePerDay * duration)}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
                                 {/* Total */}
                                 <div className="border-t border-slate-200 pt-4 space-y-2">
                                     <div className="flex justify-between text-sm text-slate-600">
-                                        <span>Subtotal</span>
-                                        <span>{formatCurrency(totalPrice)}</span>
+                                        <span>Subtotal Barang</span>
+                                        <span className="font-medium">{formatCurrency(totalItemPrice)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm text-slate-600">
                                         <span>Pengiriman</span>
@@ -342,7 +378,7 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                     </form>
                 )}
 
-                {/* === TAMPILAN 2: INSTRUKSI PEMBAYARAN (Setelah Klik Bayar) === */}
+                {/* === TAMPILAN 2: INSTRUKSI PEMBAYARAN (Page Baru setelah klik Bayar) === */}
                 {step === 'payment' && (
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
@@ -372,10 +408,6 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                             alt="QR Code Pembayaran" 
                                             className="w-full h-full object-contain"
                                         />
-                                        {/* Logo Rentify Kecil di Tengah QR */}
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
-                                            <div className="text-slate-900 font-black text-[10px]">R</div>
-                                        </div>
                                     </div>
                                     <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
                                         Buka aplikasi Gojek, OVO, Dana, atau Mobile Banking Anda, lalu scan kode di atas.
