@@ -1,8 +1,8 @@
 import React from 'react';
 import { categories } from '../data/mockData';
-import { motion } from 'framer-motion'; // Opsional: Tambah animasi dikit biar enak
+import { motion } from 'framer-motion';
 
-// Menerima prop 'onCategoryClick' dari parent (HomePage)
+// Menerima prop 'onCategoryClick'
 const CategoriesSection = ({ onCategoryClick }) => {
     return (
         <section className="py-12 container mx-auto px-6 relative z-20 -mt-16">
@@ -15,8 +15,8 @@ const CategoriesSection = ({ onCategoryClick }) => {
                     {categories.map((cat, idx) => (
                         <motion.button 
                             key={idx}
-                            // PENTING: Saat diklik, panggil fungsi dari props
-                            onClick={() => onCategoryClick(cat.slug)} 
+                            // PERBAIKAN: Kirim 'cat.name' (Nama Lengkap) agar pencarian akurat
+                            onClick={() => onCategoryClick(cat.name)} 
                             
                             whileHover={{ scale: 1.05, y: -5 }}
                             whileTap={{ scale: 0.95 }}
