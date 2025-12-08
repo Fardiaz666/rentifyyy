@@ -1,19 +1,28 @@
 import React, { createContext, useState } from 'react';
-// PENTING: Ambil data mentah (INITIAL_PRODUCTS) dari mockData
 import { INITIAL_PRODUCTS } from '../data/mockData'; 
 
 export const CartContext = createContext();
 
+// Data awal dummy untuk Seller (agar dashboard tidak kosong saat pertama buka)
+const INITIAL_SELLER_ORDERS = [
+    { id: 'INV-103', item: 'Sony A7III + Lensa GM', customer: 'Budi Santoso', date: '8 Des 2025', status: 'Menunggu Konfirmasi', total: 350000, location: 'Tangerang Selatan', due: '12 Jam' },
+    { id: 'INV-102', item: 'Kursi Futura + Cover (20 Pcs)', customer: 'Ibu Rina', date: '7 Des 2025', status: 'Siap Dikirim', total: 100000, location: 'Bekasi', due: 'Besok' },
+];
+
 export const CartProvider = ({ children }) => {
-    // STATE GLOBAL UNTUK PRODUK
+    // Global Products
     const [allProducts, setAllProducts] = useState(INITIAL_PRODUCTS);
     
-    // State Pembeli
+    // Buyer State
     const [cart, setCart] = useState([]);
-    const [orders, setOrders] = useState([]);
+    const [orders, setOrders] = useState([]); // Riwayat Pembeli
+
+    // Seller State (BARU)
+    const [sellerOrders, setSellerOrders] = useState(INITIAL_SELLER_ORDERS); // Pesanan Masuk Penjual
 
     const addToCart = (product) => {
         setCart([...cart, product]);
+        // Toast simulasi
         const toast = document.createElement('div');
         toast.innerText = `🛒 ${product.name} masuk keranjang!`;
         toast.className = 'fixed bottom-5 right-5 bg-slate-900 text-[#14e9ff] px-6 py-3 rounded-xl shadow-2xl font-bold z-50 animate-bounce flex items-center gap-2';
@@ -25,48 +34,69 @@ export const CartProvider = ({ children }) => {
         setCart(cart.filter((_, index) => index !== indexToRemove));
     };
 
+    // FUNGSI CHECKOUT (Diupdate agar masuk ke Seller juga)
     const addOrder = (orderData) => {
+        // 1. Masukkan ke Riwayat Pembeli
         setOrders([orderData, ...orders]);
+        
+        // 2. Masukkan ke Pesanan Masuk Penjual (Simulasi)
+        // Kita format sedikit datanya agar cocok dengan tampilan tabel seller
+        const newSellerOrder = {
+            id: orderData.id,
+            item: orderData.items.length > 1 ? `${orderData.items[0].name} (+${orderData.items.length - 1} lainnya)` : orderData.items[0].name,
+            customer: "John Doe (Anda)", // Simulasi nama pembeli saat ini
+            date: orderData.date,
+            status: 'Menunggu Konfirmasi', // Status awal untuk penjual
+            total: orderData.total,
+            location: orderData.items[0].location,
+            due: '24 Jam'
+        };
+
+        setSellerOrders([newSellerOrder, ...sellerOrders]);
+
+        // 3. Kosongkan Keranjang
         setCart([]);
     };
     
-    // --- FUNGSI SELLER UNTUK MENGELOLA PRODUK ---
-    
-    // FUNGSI BARU UNTUK SELLER: Menambah Produk
+    // Fungsi Manajemen Produk (Seller)
     const addProduct = (newProduct) => {
         const newId = (allProducts.length + 1).toString();
         const productWithId = { 
             ...newProduct, 
             id: newId, 
-            rating: 5.0, 
+            rating: 0, 
             reviews: 0, 
-            availability: newProduct.stock > 0,
+            availability: true,
             specs: { 'Dibuat': new Date().toLocaleDateString('id-ID') } 
         };
-        // Tambahkan ke daftar produk global
         setAllProducts([productWithId, ...allProducts]); 
     };
     
-    // FUNGSI BARU UNTUK SELLER: Mengedit Produk
     const updateProduct = (updatedProduct) => {
         setAllProducts(allProducts.map(p => 
-            p.id === updatedProduct.id ? { ...updatedProduct, availability: updatedProduct.stock > 0 } : p
+            p.id === updatedProduct.id ? { ...updatedProduct } : p
         ));
     };
 
-    // FUNGSI BARU UNTUK SELLER: Menghapus Produk (Simulasi)
     const deleteProduct = (productId) => {
         setAllProducts(allProducts.filter(p => p.id !== productId));
     };
 
+    // Fungsi Manajemen Order Seller (Terima/Tolak)
+    const updateSellerOrderStatus = (orderId, newStatus) => {
+        setSellerOrders(sellerOrders.map(order => 
+            order.id === orderId ? { ...order, status: newStatus } : order
+        ));
+    };
 
     const totalPrice = cart.reduce((total, item) => total + item.pricePerDay, 0);
 
     return (
         <CartContext.Provider value={{ 
-            cart, addToCart, removeFromCart, totalPrice, orders, addOrder,
-            // Produk Global (Digunakan oleh Buyer dan Seller Page)
-            allProducts, addProduct, updateProduct, deleteProduct
+            cart, addToCart, removeFromCart, totalPrice, 
+            orders, addOrder, // Buyer
+            allProducts, addProduct, updateProduct, deleteProduct, // Product Mgmt
+            sellerOrders, updateSellerOrderStatus // Seller Order Mgmt (BARU)
         }}>
             {children}
         </CartContext.Provider>
