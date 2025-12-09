@@ -144,15 +144,15 @@ const HomePage = ({ onPageChange, onProductClick, isLoggedIn }) => {
                                         <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=600" alt="Kamera" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
                                     </div>
                                     <div className="h-48 rounded-[2rem] overflow-hidden shadow-2xl relative group bg-slate-200">
-                                        <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=600" alt="Stroller" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+                                        <img src="https://images.unsplash.com/photo-1527011046414-4781f1f94f8c?auto=format&fit=crop&q=80&w=600" alt="Stroller" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
                                     </div>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="h-48 rounded-[2rem] overflow-hidden shadow-2xl relative group bg-slate-200">
-                                        <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=600" alt="Motor" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+                                        <img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=600" alt="Motor" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
                                     </div>
                                     <div className="h-64 rounded-[2rem] overflow-hidden shadow-2xl relative group bg-slate-200">
-                                        <img src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=600" alt="Gadget" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+                                        <img src="https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&q=80&w=600" alt="Gadget" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
                                     </div>
                                 </div>
                             </motion.div>
