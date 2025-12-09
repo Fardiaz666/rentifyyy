@@ -41,9 +41,10 @@ export default function App() {
 
     const handlePageChange = (newPage, searchData = '') => {
         // 1. Logika Proteksi Halaman Seller
+        // Jika user mencoba akses halaman seller tapi belum login
         if (newPage.startsWith('seller') && !isLoggedIn) {
-            setRedirectAfterLogin('seller'); 
-            setPage('auth'); 
+            setRedirectAfterLogin('seller'); // Simpan tujuan
+            setPage('auth'); // Paksa login
             return;
         }
 
@@ -54,7 +55,7 @@ export default function App() {
         }
 
         setPage(newPage);
-        setCurrentSearchTerm(searchData);
+        setCurrentSearchTerm(searchData); // Simpan kata kunci pencarian
         window.scrollTo(0, 0); 
         if (newPage === 'home') setSelectedProduct(null);
     };
@@ -82,6 +83,7 @@ export default function App() {
         let targetPage = 'home';
         let role = 'buyer';
 
+        // Cek redirect intent dari state sebelumnya
         if (redirectAfterLogin === 'checkout') {
             targetPage = 'checkout';
             role = 'buyer'; 
@@ -114,6 +116,8 @@ export default function App() {
 
     // --- FUNGSI RENDER DASHBOARD PENJUAL ---
     const renderSellerContent = () => {
+        
+        // Komponen Placeholder untuk halaman yang belum ada isinya
         const PlaceholderPage = ({ title, content }) => (
             <div className="p-4 bg-white rounded-3xl shadow-xl border border-slate-100 min-h-[500px]">
                 <button 
@@ -139,9 +143,11 @@ export default function App() {
                 return <SellerProductsPage key="seller_products_content" onPageChange={handlePageChange} />; 
             case 'seller_finance': 
                 return <SellerFinancePage key="seller_finance" onPageChange={handlePageChange} />;
+            // Analisis Penjualan menggunakan placeholder karena belum dibuatkan file khususnya
             case 'seller_analytics': 
                 return <PlaceholderPage title="Analisis Penjualan" content="Grafik performa, barang terlaris, dan wawasan bisnis." />;
             default:
+                // Fallback aman agar tidak blank
                 return <SellerDashboard key="seller_dashboard_default" onPageChange={handlePageChange} />;
         }
     };
@@ -151,7 +157,7 @@ export default function App() {
         <CartProvider>
             <div className="min-h-screen bg-white text-slate-800 font-sans">
                 
-                {/* Navbar */}
+                {/* Navbar (Hanya Tampil di Buyer View) */}
                 {page !== 'auth' && page !== 'checkout' && !page.startsWith('seller') && (
                     <Navbar 
                         onPageChange={handlePageChange} 
@@ -212,6 +218,7 @@ export default function App() {
                             {page === 'security' && (
                                 <SecurityPage key="security" onBack={() => handlePageChange('settings')} />
                             )}
+                            
                             {page === 'wishlist' && (
                                 <div key="wishlist" className="min-h-screen pt-32 text-center bg-slate-50">
                                     <h2 className="text-2xl font-bold text-slate-800">Barang Disukai</h2>
