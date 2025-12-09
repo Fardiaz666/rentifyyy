@@ -145,7 +145,7 @@ export const INITIAL_PRODUCTS = [
     id: '14', 
     name: 'Koper Samsonite Hardcase 24 Inch', 
     category: 'Perjalanan & Kendaraan', 
-    description: 'Koper medium untuk liburan 5-7 hari. Roda 360 derajat sangat lancar. Bahan polycarbonate kuat dan ringan. Kunci TSA Lock aman.', 
+    description: 'Koper medium untuk liburan 5-7 hari. Roda 360 derajat sangat lancar. Kunci TSA Lock aman.', 
     pricePerDay: 75000, 
     imageUrl: 'https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&q=80&w=800', 
     location: 'Tangerang', 
@@ -219,7 +219,7 @@ export const INITIAL_PRODUCTS = [
     id: '11', 
     name: 'Vacuum Cleaner Robot Xiaomi', 
     category: 'Rumah & Hunian', 
-    description: 'Malas nyapu? Sewa robot vacuum ini. Bisa nyapu dan ngepel otomatis. Sensor pintar anti nabrak. Lantai bersih kinclong tanpa capek.', 
+    description: 'Malas nyapu? Sewa robot vacuum ini. Bisa nyapu dan ngepel otomatis. Lantai bersih kinclong tanpa capek.', 
     pricePerDay: 60000, 
     imageUrl: robotImg, 
     location: 'Jakarta Utara', 
@@ -290,25 +290,37 @@ export const INITIAL_PRODUCTS = [
 ];
 
 // --- DATA ULASAN (REVIEWS) ---
-export const mockReviews = {
+export let mockReviews = {
     '1': [
-        { id: 101, user: "Rina S.", rating: 5, date: "15 Okt 2023", comment: "Stroller-nya bersih banget, wangi laundry. Anak saya betah." },
-        { id: 102, user: "Dimas A.", rating: 5, date: "20 Sep 2023", comment: "Sangat praktis buat traveling. Kondisi barang like new." }
+        { id: 'r1-1', author: 'Budi', rating: 5, comment: 'Motornya mulus banget, tarikannya enteng. Penjualnya ramah, prosesnya cepet. Recommended!', type: 'positive' },
+        { id: 'r1-2', author: 'Rina', rating: 4, comment: 'Overall oke, cuma jas hujannya agak kecil aja hehe. Tapi motornya mantap!', type: 'neutral' },
     ],
     '2': [
-        { id: 201, user: "Fajar Visual", rating: 5, date: "01 Nov 2023", comment: "Lensa G-Master tajam banget. Body kamera sensornya bersih." },
-        { id: 202, user: "Sarah Content", rating: 4, date: "05 Okt 2023", comment: "Baterai awet. Cuma tas kameranya agak kotor dikit luarnya." }
+        { id: 'r2-1', author: 'ContentCreatorHits', rating: 5, comment: 'Gila, autofokusnya beneran dewa. Bikin vlog jadi gampang banget. Barangnya juga bersih kaya baru.', type: 'positive' },
+        { id: 'r2-2', author: 'Anak DKV', rating: 4, comment: 'Baterainya dapet satu, jadi harus pinter-pinter manage. Tapi buat kualitas gambar, ga ada lawan sih.', type: 'neutral' },
     ],
     '17': [
-        { id: 171, user: "Youtuber Pemula", rating: 5, date: "10 Des 2023", comment: "Cahayanya terang banget, video jadi jernih. Softbox-nya bikin cahaya halus." }
+        { id: 'r17-1', author: 'Youtuber Pemula', rating: 5, comment: 'Cahayanya terang banget, video jadi jernih. Softbox-nya bikin cahaya halus.', type: 'positive' }
     ],
     '13': [
-        { id: 131, user: "Budi Karaoke", rating: 5, date: "12 Jan 2024", comment: "Suaranya mantap! Bass-nya kerasa di dada. Baterai tahan lama buat party semalam." }
+        { id: 'r13-1', author: 'Budi Karaoke', rating: 5, comment: 'Suaranya mantap! Bass-nya kerasa di dada. Baterai tahan lama buat party semalam.', type: 'positive' }
     ],
     '11': [
-        { id: 111, user: "Ibu Rumah Tangga", rating: 4, date: "05 Feb 2024", comment: "Membantu banget. Lantai jadi bersih. Cuma agak bingung setting map awalnya." }
+        { id: 'r11-1', author: 'Ibu Rumah Tangga', rating: 4, comment: 'Membantu banget. Lantai jadi bersih. Cuma agak bingung setting map awalnya.', type: 'positive' }
     ],
     '14': [
-        { id: 141, user: "Traveler", rating: 5, date: "20 Jan 2024", comment: "Kopernya ringan tapi kuat. Roda lancar banget didorongnya." }
+        { id: 'r14-1', author: 'Traveler', rating: 5, comment: 'Kopernya ringan tapi kuat. Roda lancar banget didorongnya.', type: 'positive' }
+    ],
+     '5': [
+        { id: 'r5-1', author: 'Sehat Selalu', rating: 5, comment: 'Udara di kamar jadi seger banget. Suara mesinnya halus, ga ganggu tidur.', type: 'positive' }
     ]
+};
+
+// Fungsi untuk menambahkan ulasan baru secara dinamis
+export const addMockReview = (productId, newReview) => {
+    if (!mockReviews[productId]) {
+        mockReviews[productId] = [];
+    }
+    // Tambahkan ulasan baru ke awal array agar muncul paling atas
+    mockReviews[productId].unshift(newReview);
 };
