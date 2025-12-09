@@ -1,8 +1,9 @@
 import React from 'react';
-import { motion } from 'framer-motion'; // Perbaikan: Menghapus '=>'
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+// 1. IMPORT GAMBAR DARI ASSETS
+import sellerIllustration from '../assets/seller-illustration.png'; 
 
-// Menerima prop 'isLoggedIn' dari HomePage
 const OwnerCTA = ({ onPageChange, isLoggedIn }) => {
 
     const handleCTAClick = () => {
@@ -42,9 +43,21 @@ const OwnerCTA = ({ onPageChange, isLoggedIn }) => {
                         </motion.button>
                     </div>
 
-                    {/* Ilustrasi Placeholder */}
-                    <div className="relative z-10 hidden lg:block">
-                        <div className="w-64 h-64 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700 flex items-center justify-center text-slate-50">
+                    {/* Ilustrasi Penjual (Updated) */}
+                    <div className="relative z-10 hidden lg:block w-1/3">
+                        {/* 2. GUNAKAN GAMBAR DI SINI */}
+                        <img 
+                            src={sellerIllustration} 
+                            alt="Ilustrasi Penjual" 
+                            className="w-full h-auto object-contain drop-shadow-2xl hover:scale-105 transition duration-500 transform rotate-[-5deg]"
+                            onError={(e) => {
+                                // Fallback jika gambar belum ada/gagal load
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                            }}
+                        />
+                        {/* Fallback Placeholder (Disembunyikan jika gambar berhasil load) */}
+                        <div className="hidden w-64 h-64 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700 items-center justify-center text-slate-50 mx-auto">
                             <span className="text-sm font-bold opacity-70">Ilustrasi Penjual</span>
                         </div>
                     </div>
