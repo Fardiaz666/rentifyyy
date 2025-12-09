@@ -14,7 +14,6 @@ const ReturnModal = ({ isOpen, onClose, order, onConfirmReturn }) => {
         if (!resi.trim()) return alert("Nomor resi tidak boleh kosong!");
 
         if (window.confirm(`Konfirmasi pengembalian dengan resi ${resi} menggunakan ${courier}?`)) {
-            // Panggil handler konfirmasi pengembalian
             onConfirmReturn(order.id, { resi, courier });
             onClose();
         }
@@ -70,15 +69,14 @@ const ReturnModal = ({ isOpen, onClose, order, onConfirmReturn }) => {
 };
 
 const OrderHistoryPage = ({ onBack }) => {
-    // AMBIL DATA PEMBELI DARI CONTEXT
-    const { orders, markOrderAsReturned } = useContext(CartContext);
+    // Ambil data dari Context (tambahkan fallback array kosong [] biar aman)
+    const { orders = [], markOrderAsReturned } = useContext(CartContext);
     
     const [filter, setFilter] = useState('Semua');
     const [expandedOrder, setExpandedOrder] = useState(null);
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [orderToReturn, setOrderToReturn] = useState(null);
     
-    // Logika: Order dianggap "Siap Dikembalikan" jika statusnya 'Dalam Pengiriman'
     const isReadyToReturn = (status) => status === 'Dalam Pengiriman';
 
     const filteredOrders = filter === 'Semua' 
@@ -95,7 +93,6 @@ const OrderHistoryPage = ({ onBack }) => {
     };
     
     const handleConfirmReturn = (orderId, details) => {
-        // Panggil fungsi global untuk update status di Context Pembeli dan Penjual
         markOrderAsReturned(orderId, details);
     };
 
@@ -104,21 +101,18 @@ const OrderHistoryPage = ({ onBack }) => {
             case 'Menunggu Konfirmasi': return 'bg-yellow-100 text-yellow-800';
             case 'Siap Dikirim': return 'bg-blue-100 text-blue-800';
             case 'Dalam Pengiriman': return 'bg-purple-100 text-purple-800';
-            case 'Menunggu Penerimaan': return 'bg-orange-100 text-orange-800'; 
-            case 'Selesai & Dana Cair': return 'bg-green-100 text-green-800'; 
+            case 'Menunggu Penerimaan': return 'bg-orange-100 text-orange-800';
+            case 'Selesai & Dana Cair': return 'bg-green-100 text-green-800';
             case 'Dibatalkan': return 'bg-red-100 text-red-800';
             default: return 'bg-slate-100 text-slate-800';
         }
     };
 
-    // Kalkulasi Biaya Ringkasan yang Aman (Tambahan)
+    // Fungsi Kalkulasi Aman (Mencegah error NaN atau undefined)
     const calculateSummaryCosts = (order) => {
         const serviceFee = 2000;
-        // Asumsi baseTotalPrice adalah total harga item tanpa biaya tambahan (dari Context sebelumnya)
-        // Kita hitung ulang Subtotal Harga Barang dari item array
-        const subtotalItems = order.items?.reduce((sum, item) => sum + (item.pricePerDay * (order.duration || 1)), 0) || 0;
-        
-        // Asumsi shippingCost dimasukkan ke dalam orderData saat checkout (atau default 15000 jika tidak ada)
+        // Gunakan optional chaining (?.) dan fallback || 0
+        const subtotalItems = order.items?.reduce((sum, item) => sum + ((item.pricePerDay || 0) * (order.duration || 1)), 0) || 0;
         const shippingCost = order.shippingCost || 15000; 
 
         return {
@@ -128,7 +122,6 @@ const OrderHistoryPage = ({ onBack }) => {
             totalFinal: subtotalItems + shippingCost + serviceFee
         };
     };
-
 
     return (
         <motion.div 
@@ -178,7 +171,8 @@ const OrderHistoryPage = ({ onBack }) => {
                         </div>
                     ) : (
                         filteredOrders.map((order) => {
-                            const summary = calculateSummaryCosts(order); // Hitung biaya dengan aman
+                            // Hitung ringkasan biaya untuk order ini
+                            const summary = calculateSummaryCosts(order);
 
                             return (
                                 <motion.div 
@@ -188,7 +182,7 @@ const OrderHistoryPage = ({ onBack }) => {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
                                 >
-                                    {/* --- CARD HEADER (Selalu Muncul) --- */}
+                                    {/* --- CARD HEADER --- */}
                                     <div 
                                         onClick={() => toggleExpand(order.id)}
                                         className="p-6 cursor-pointer hover:bg-slate-50/50 transition"
@@ -207,7 +201,7 @@ const OrderHistoryPage = ({ onBack }) => {
                                             </div>
                                             <div className="text-left sm:text-right">
                                                 <p className="text-xs text-slate-400 font-bold uppercase mb-1">Total Bayar</p>
-                                                <p className="text-xl font-black text-slate-900">{formatCurrency(order.total)}</p>
+                                                <p className="text-xl font-black text-slate-900">{formatCurrency(order.total || 0)}</p>
                                                 
                                                 {/* TOMBOL KIRIM KEMBALI */}
                                                 {isReadyToReturn(order.status) && (
@@ -221,7 +215,6 @@ const OrderHistoryPage = ({ onBack }) => {
                                             </div>
                                         </div>
                                         
-                                        {/* Footer Arrow */}
                                         <div className="mt-4 flex justify-center">
                                             {expandedOrder === order.id ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
                                         </div>
@@ -239,10 +232,16 @@ const OrderHistoryPage = ({ onBack }) => {
                                                 <div className="p-6 md:p-8 space-y-6">
                                                     <h4 className="font-bold text-slate-900 text-lg border-b pb-2">Rincian Barang & Pengiriman</h4>
                                                     
-                                                    {/* Detail Barang */}
-                                                    {order.items?.map((item, idx) => ( // Gunakan optional chaining
+                                                    {/* DETAIL BARANG (DENGAN PROTEKSI GAMBAR) */}
+                                                    {order.items?.map((item, idx) => (
                                                         <div key={idx} className="flex items-center gap-4">
-                                                            <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-xl object-cover bg-slate-100" />
+                                                            {/* PERBAIKAN: Fallback Image jika imageUrl kosong */}
+                                                            <img 
+                                                                src={item.imageUrl || 'https://placehold.co/100x100/eeeeee/cccccc?text=No+Image'} 
+                                                                alt={item.name} 
+                                                                className="w-16 h-16 rounded-xl object-cover bg-slate-100" 
+                                                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/100x100/eeeeee/cccccc?text=Error'; }}
+                                                            />
                                                             <div className="flex-1">
                                                                 <p className="font-bold text-slate-800 text-sm">{item.name}</p>
                                                                 <p className="text-xs text-slate-500">{formatCurrency(item.pricePerDay || 0)} x {order.duration || 1} hari</p>
@@ -250,7 +249,7 @@ const OrderHistoryPage = ({ onBack }) => {
                                                         </div>
                                                     ))}
 
-                                                    {/* Bukti Pengembalian (Jika sudah dikirim oleh pembeli) */}
+                                                    {/* Bukti Pengembalian */}
                                                     {order.status === 'Menunggu Penerimaan' && (
                                                         <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl space-y-2">
                                                             <p className="text-sm font-bold text-orange-800 flex items-center gap-2">
@@ -261,7 +260,7 @@ const OrderHistoryPage = ({ onBack }) => {
                                                         </div>
                                                     )}
 
-                                                    {/* Ringkasan Harga (Menggunakan Summary yang Aman) */}
+                                                    {/* Ringkasan Harga */}
                                                     <div className="border-t border-slate-100 pt-4">
                                                         <div className="flex justify-between text-sm py-1"><span>Total Harga Barang</span><span>{formatCurrency(summary.subtotal)}</span></div>
                                                         <div className="flex justify-between text-sm py-1"><span>Biaya Pengiriman</span><span>{summary.shipping === 0 ? 'Gratis' : formatCurrency(summary.shipping)}</span></div>
@@ -279,7 +278,7 @@ const OrderHistoryPage = ({ onBack }) => {
                 </div>
             </div>
             
-            {/* Modal Pengembalian (Hanya muncul jika orderToReturn ada) */}
+            {/* Modal Pengembalian */}
             <ReturnModal 
                 isOpen={showReturnModal} 
                 onClose={() => setShowReturnModal(false)}
