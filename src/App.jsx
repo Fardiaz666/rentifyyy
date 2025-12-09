@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
@@ -16,6 +16,7 @@ import SellerLayout from './pages/SellerLayout';
 import SellerOrdersPage from './pages/SellerOrdersPage'; 
 import SellerProductsPage from './pages/SellerProductsPage';
 import SellerFinancePage from './pages/SellerFinancePage'; 
+import SellerAnalyticsPage from './pages/SellerAnalyticsPage'; // Import Halaman Analisis
 import { AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 
@@ -41,10 +42,9 @@ export default function App() {
 
     const handlePageChange = (newPage, searchData = '') => {
         // 1. Logika Proteksi Halaman Seller
-        // Jika user mencoba akses halaman seller tapi belum login
         if (newPage.startsWith('seller') && !isLoggedIn) {
-            setRedirectAfterLogin('seller'); // Simpan tujuan
-            setPage('auth'); // Paksa login
+            setRedirectAfterLogin('seller'); 
+            setPage('auth'); 
             return;
         }
 
@@ -55,7 +55,7 @@ export default function App() {
         }
 
         setPage(newPage);
-        setCurrentSearchTerm(searchData); // Simpan kata kunci pencarian
+        setCurrentSearchTerm(searchData);
         window.scrollTo(0, 0); 
         if (newPage === 'home') setSelectedProduct(null);
     };
@@ -83,7 +83,6 @@ export default function App() {
         let targetPage = 'home';
         let role = 'buyer';
 
-        // Cek redirect intent dari state sebelumnya
         if (redirectAfterLogin === 'checkout') {
             targetPage = 'checkout';
             role = 'buyer'; 
@@ -91,7 +90,6 @@ export default function App() {
             targetPage = 'seller';
             role = 'seller'; 
         } else {
-            // Default jika login biasa
             targetPage = 'home';
             role = 'buyer';
         }
@@ -116,8 +114,6 @@ export default function App() {
 
     // --- FUNGSI RENDER DASHBOARD PENJUAL ---
     const renderSellerContent = () => {
-        
-        // Komponen Placeholder untuk halaman yang belum ada isinya
         const PlaceholderPage = ({ title, content }) => (
             <div className="p-4 bg-white rounded-3xl shadow-xl border border-slate-100 min-h-[500px]">
                 <button 
@@ -143,11 +139,10 @@ export default function App() {
                 return <SellerProductsPage key="seller_products_content" onPageChange={handlePageChange} />; 
             case 'seller_finance': 
                 return <SellerFinancePage key="seller_finance" onPageChange={handlePageChange} />;
-            // Analisis Penjualan menggunakan placeholder karena belum dibuatkan file khususnya
             case 'seller_analytics': 
-                return <PlaceholderPage title="Analisis Penjualan" content="Grafik performa, barang terlaris, dan wawasan bisnis." />;
+                // Menggunakan komponen SellerAnalyticsPage yang sudah dibuat
+                return <SellerAnalyticsPage key="seller_analytics" onPageChange={handlePageChange} />;
             default:
-                // Fallback aman agar tidak blank
                 return <SellerDashboard key="seller_dashboard_default" onPageChange={handlePageChange} />;
         }
     };
@@ -157,7 +152,7 @@ export default function App() {
         <CartProvider>
             <div className="min-h-screen bg-white text-slate-800 font-sans">
                 
-                {/* Navbar (Hanya Tampil di Buyer View) */}
+                {/* Navbar */}
                 {page !== 'auth' && page !== 'checkout' && !page.startsWith('seller') && (
                     <Navbar 
                         onPageChange={handlePageChange} 
@@ -218,7 +213,6 @@ export default function App() {
                             {page === 'security' && (
                                 <SecurityPage key="security" onBack={() => handlePageChange('settings')} />
                             )}
-                            
                             {page === 'wishlist' && (
                                 <div key="wishlist" className="min-h-screen pt-32 text-center bg-slate-50">
                                     <h2 className="text-2xl font-bold text-slate-800">Barang Disukai</h2>
