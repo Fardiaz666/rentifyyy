@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Users, Eye, ShoppingBag, ArrowUpRight, ArrowDownRight, ArrowLeft } from 'lucide-react';
-import { formatCurrency } from '../utils/currency';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
@@ -25,7 +24,7 @@ const SellerAnalyticsPage = ({ onPageChange }) => {
     ];
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 space-y-6">
             
             {/* Header & Navigasi */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
