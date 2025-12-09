@@ -27,12 +27,12 @@ export default function App() {
     const [currentSearchTerm, setCurrentSearchTerm] = useState(''); 
     const [redirectAfterLogin, setRedirectAfterLogin] = useState(null);
 
-    // Inisialisasi Login dari LocalStorage
+    // 1. Inisialisasi Login dari LocalStorage
     const [isLoggedIn, setIsLoggedIn] = useState(() => {
         return localStorage.getItem('isLoggedIn') === 'true';
     });
     
-    // Inisialisasi Role
+    // 2. Inisialisasi Role dari LocalStorage
     const [userRole, setUserRole] = useState(() => {
         return localStorage.getItem('userRole') || 'buyer';
     });
@@ -41,14 +41,14 @@ export default function App() {
 
     const handlePageChange = (newPage, searchData = '') => {
         // 1. Logika Proteksi Halaman Seller
-        if (newPage === 'seller' && !isLoggedIn) {
+        if (newPage.startsWith('seller') && !isLoggedIn) {
             setRedirectAfterLogin('seller'); 
             setPage('auth'); 
             return;
         }
 
-        // 2. PERBAIKAN BUG: Auto-switch role jika user login mau masuk ke seller
-        if (newPage === 'seller' && isLoggedIn) {
+        // 2. Auto-switch role jika user login mau masuk ke seller
+        if (newPage.startsWith('seller') && isLoggedIn) {
             setUserRole('seller');
             localStorage.setItem('userRole', 'seller');
         }
@@ -89,6 +89,7 @@ export default function App() {
             targetPage = 'seller';
             role = 'seller'; 
         } else {
+            // Default jika login biasa
             targetPage = 'home';
             role = 'buyer';
         }
@@ -150,6 +151,7 @@ export default function App() {
         <CartProvider>
             <div className="min-h-screen bg-white text-slate-800 font-sans">
                 
+                {/* Navbar */}
                 {page !== 'auth' && page !== 'checkout' && !page.startsWith('seller') && (
                     <Navbar 
                         onPageChange={handlePageChange} 
@@ -159,6 +161,7 @@ export default function App() {
                     />
                 )}
                 
+                {/* Sidebar Keranjang */}
                 <AnimatePresence>
                     {isCartOpen && (
                         <CartSidebar 
@@ -169,10 +172,10 @@ export default function App() {
                     )}
                 </AnimatePresence>
                 
+                {/* Router */}
                 <AnimatePresence mode="wait">
                     
                     {/* LAYOUT PENJUAL */}
-                    {/* PERBAIKAN: Hapus syarat 'userRole === seller' di sini agar tidak blank */}
                     {page.startsWith('seller') && isLoggedIn ? (
                         <SellerLayout key="seller-layout" onBack={() => handlePageChange('home')} onLogout={handleLogout} onPageChange={handlePageChange}>
                             <AnimatePresence mode="wait">
