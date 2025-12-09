@@ -11,12 +11,14 @@ const Navbar = ({ onPageChange, onCartClick, isLoggedIn, onLogout }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const dropdownRef = useRef(null);
 
+    // Efek scroll untuk shadow navbar
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Menutup dropdown jika klik di luar
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -32,14 +34,12 @@ const Navbar = ({ onPageChange, onCartClick, isLoggedIn, onLogout }) => {
         onPageChange(page);      
     };
 
-    // Fungsi khusus untuk tombol 'Jadi Pemilik Barang' di Nav
+    // Fungsi Logika Tombol "Jadi Pemilik Barang"
     const handleSellerClick = () => {
-        // Jika sudah login, arahkan ke dashboard seller
         if (isLoggedIn) {
-            onPageChange('seller');
+            onPageChange('seller'); // Masuk Dashboard jika sudah login
         } else {
-            // Jika belum login, arahkan ke halaman otentikasi
-            onPageChange('auth');
+            onPageChange('auth'); // Masuk Login jika belum
         }
     };
 
@@ -65,10 +65,12 @@ const Navbar = ({ onPageChange, onCartClick, isLoggedIn, onLogout }) => {
 
                 {/* MENU LINKS */}
                 <div className="hidden md:flex gap-8 font-bold text-slate-600 text-sm">
-                    <button onClick={() => onPageChange('home')} className="hover:text-[#00c0d4] transition">Beranda</button>
-                    <button onClick={() => onPageChange('products')} className="hover:text-[#00c0d4] transition">Kategori</button>
-                    {/* PERBAIKAN DI SINI */}
-                    <button onClick={handleSellerClick} className="hover:text-[#00c0d4] transition">Jadi Pemilik Barang</button>
+                    {/* Update Warna Hover ke #016ff8 */}
+                    <button onClick={() => onPageChange('home')} className="hover:text-[#016ff8] transition">Beranda</button>
+                    <button onClick={() => onPageChange('products')} className="hover:text-[#016ff8] transition">Kategori</button>
+                    
+                    {/* Menggunakan handleSellerClick */}
+                    <button onClick={handleSellerClick} className="hover:text-[#016ff8] transition">Jadi Pemilik Barang</button>
                 </div>
 
                 {/* ACTION BUTTONS */}
@@ -76,9 +78,11 @@ const Navbar = ({ onPageChange, onCartClick, isLoggedIn, onLogout }) => {
                     {/* Tombol Keranjang */}
                     <button 
                         onClick={onCartClick} 
-                        className="relative p-2.5 text-slate-800 hover:bg-[#14e9ff]/10 rounded-full transition group"
+                        // Update Warna Hover Background ke #016ff8
+                        className="relative p-2.5 text-slate-800 hover:bg-[#016ff8]/10 rounded-full transition group"
                     >
-                        <ShoppingCart size={22} className="group-hover:text-[#00c0d4] transition" />
+                        {/* Update Warna Hover Icon ke #016ff8 */}
+                        <ShoppingCart size={22} className="group-hover:text-[#016ff8] transition" />
                         {cartCount > 0 && (
                             <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-pulse shadow-sm border border-white">
                                 {cartCount}
@@ -89,16 +93,19 @@ const Navbar = ({ onPageChange, onCartClick, isLoggedIn, onLogout }) => {
                     {/* LOGIKA LOGIN / DROPDOWN PROFIL */}
                     {isLoggedIn ? (
                         <div className="relative" ref={dropdownRef}>
+                            {/* Trigger Button (Profil) */}
                             <button 
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                                 className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer group"
                             >
                                 <div className="text-right hidden lg:block">
-                                    <p className="text-xs text-slate-400 font-medium group-hover:text-[#00c0d4] transition">Halo,</p>
+                                    {/* Update Warna Hover Teks ke #016ff8 */}
+                                    <p className="text-xs text-slate-400 font-medium group-hover:text-[#016ff8] transition">Halo,</p>
                                     <p className="text-sm font-bold text-slate-900">John Doe</p>
                                 </div>
                                 
-                                <div className={`w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center overflow-hidden transition ${isProfileOpen ? 'ring-2 ring-[#14e9ff] bg-white' : 'bg-slate-100 hover:bg-slate-200'}`}>
+                                {/* Update Ring Warna Avatar ke #016ff8 */}
+                                <div className={`w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center overflow-hidden transition ${isProfileOpen ? 'ring-2 ring-[#016ff8] bg-white' : 'bg-slate-100 hover:bg-slate-200'}`}>
                                     <img 
                                         src="https://api.dicebear.com/9.x/avataaars/svg?seed=John" 
                                         alt="Avatar" 
@@ -125,27 +132,28 @@ const Navbar = ({ onPageChange, onCartClick, isLoggedIn, onLogout }) => {
                                         </div>
                                         
                                         <div className="p-2">
+                                            {/* Update Warna Hover Menu Item ke #016ff8 */}
                                             <button 
                                                 onClick={() => handleDropdownClick('profile')}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#00c0d4] rounded-xl transition text-left font-medium"
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#016ff8] rounded-xl transition text-left font-medium"
                                             >
                                                 <User size={18} /> Profil Saya
                                             </button>
                                             <button 
                                                 onClick={() => handleDropdownClick('orders')}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#00c0d4] rounded-xl transition text-left font-medium"
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#016ff8] rounded-xl transition text-left font-medium"
                                             >
                                                 <Package size={18} /> Riwayat Pesanan
                                             </button>
                                             <button 
                                                 onClick={() => handleDropdownClick('wishlist')}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#00c0d4] rounded-xl transition text-left font-medium"
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#016ff8] rounded-xl transition text-left font-medium"
                                             >
                                                 <Heart size={18} /> Disukai
                                             </button>
                                             <button 
                                                 onClick={() => handleDropdownClick('settings')}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#00c0d4] rounded-xl transition text-left font-medium"
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#016ff8] rounded-xl transition text-left font-medium"
                                             >
                                                 <Settings size={18} /> Pengaturan
                                             </button>
