@@ -1,19 +1,20 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Users, Eye, ShoppingBag, ArrowUpRight, ArrowDownRight, ArrowLeft } from 'lucide-react';
+import { formatCurrency } from '../utils/currency';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
 const SellerAnalyticsPage = ({ onPageChange }) => {
 
-    // Data Dummy untuk Grafik (7 Hari Terakhir) - Menggunakan CSS Height
+    // Data Dummy untuk Grafik (7 Hari Terakhir)
     const chartData = [
         { day: 'Sen', value: 150000, height: '30%' },
         { day: 'Sel', value: 300000, height: '60%' },
         { day: 'Rab', value: 100000, height: '20%' },
         { day: 'Kam', value: 450000, height: '80%' },
         { day: 'Jum', value: 250000, height: '50%' },
-        { day: 'Sab', value: 600000, height: '100%' }, 
+        { day: 'Sab', value: 600000, height: '100%' }, // Paling tinggi
         { day: 'Min', value: 500000, height: '85%' },
     ];
 
@@ -110,16 +111,16 @@ const SellerAnalyticsPage = ({ onPageChange }) => {
                         </div>
                     </div>
                     
-                    {/* Visualisasi Grafik Batang */}
+                    {/* Visualisasi Grafik Batang (DIPERBAIKI UNTUK MUNCUL) */}
                     <div className="h-64 flex items-end justify-between gap-2 sm:gap-4">
                         {chartData.map((data, idx) => (
                             <div key={idx} className="flex flex-col items-center gap-2 group w-full">
                                 <div className="relative w-full flex justify-center h-full items-end">
                                     {/* Tooltip Hover */}
-                                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition bg-slate-900 text-white text-[10px] py-1 px-2 rounded-lg whitespace-nowrap z-10">
+                                    <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition bg-slate-900 text-white text-[10px] py-1 px-2 rounded-lg whitespace-nowrap z-10">
                                         {formatCurrency(data.value)}
                                     </div>
-                                    {/* Batang Grafik */}
+                                    {/* Batang Grafik DENGAN ANIMASI */}
                                     <motion.div 
                                         initial={{ height: 0 }}
                                         animate={{ height: data.height }}
