@@ -11,19 +11,10 @@ import robotImg from '../assets/robot.jpg';
 import strollerImg from '../assets/stroller.jpg';
 import perosotanImg from '../assets/perosotan.jpg';
 import gendonganImg from '../assets/gendongan.jpg';
-// Pastikan file-file placeholder ini ada atau hapus importnya jika tidak dipakai
-// import nmaxImg from '../assets/Nmax.jpg'; 
-// import kameraImg from '../assets/Kamera.jpg'; 
-// import kosanImg from '../assets/Kosan.jpg';
-// import proyektorImg from '../assets/Proyektor.jpg';
-// import kebayaImg from '../assets/Kebaya.jpeg';
-// import koperImg from '../assets/Koper.jpeg';
-// import droneImg from '../assets/Drone.jpg';
-// import sepedaImg from '../assets/Sepeda.jpg';
+// Import kameraImg jika ingin dipakai lagi, jika tidak hapus baris ini
 
 
 // --- DATA KATEGORI ---
-// PENTING: Hanya boleh ada SATU deklarasi 'categories'
 export const categories = [
     { name: 'Momen & Perayaan', icon: PartyPopper, slug: 'momen' },
     { name: 'Rumah & Hunian', icon: Home, slug: 'rumah' },
@@ -42,7 +33,7 @@ export const INITIAL_PRODUCTS = [
     category: 'Bayi & Si Kecil', 
     description: 'Stroller revolusioner yang bisa jadi car seat dalam hitungan detik. Sangat praktis untuk traveling atau jalan-jalan di mall. Steril UV sebelum sewa.', 
     pricePerDay: 150000, 
-    imageUrl: strollerImg, // Menggunakan variabel import
+    imageUrl: strollerImg, 
     location: 'Jakarta Selatan', 
     availability: true, 
     rating: 5.0, 
@@ -86,7 +77,7 @@ export const INITIAL_PRODUCTS = [
     category: 'Studio Kreator', 
     description: 'Kamera mirrorless full-frame profesional. Low light performance juara. Termasuk lensa 24-70mm GM.', 
     pricePerDay: 350000, 
-    imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800', 
+    imageUrl: kameraImg, // Menggunakan import kameraImg yang benar
     location: 'Tangerang Selatan', 
     availability: true, 
     rating: 4.9, 
@@ -166,37 +157,6 @@ export const INITIAL_PRODUCTS = [
     specs: { "Ukuran": "24 Inch (Bagasi)", "Warna": "Navy", "Fitur": "TSA Lock" },
     stock: 6
   },
-  // Tambahan NMAX
-  { 
-    id: '19', 
-    name: 'Sewa NMAX Harian', 
-    category: 'Perjalanan & Kendaraan', 
-    description: 'Butuh motor gesit buat selap-selip di kemacetan Jakarta? NMAX ini jawabannya! Irit, nyaman, bagasi luas.', 
-    pricePerDay: 90000, 
-    imageUrl: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=800', 
-    location: 'Jakarta Selatan', 
-    availability: true, 
-    rating: 4.9, 
-    reviews: 58, 
-    specs: { Brand: 'Yamaha', Model: 'NMAX Connected', Tahun: '2023', Kelengkapan: '2 Helm, 1 Jas Hujan' },
-    stock: 2
-  },
-  // Tambahan Sepeda
-   { 
-    id: '20', 
-    name: 'Sepeda Lipat Element', 
-    category: 'Perjalanan & Kendaraan', 
-    description: 'Weekend enaknya gowes! Sewa sepeda lipat ini, praktis dibawa masuk MRT atau mobil.', 
-    pricePerDay: 60000, 
-    imageUrl: 'https://images.unsplash.com/photo-1534063625405-bd872d82946c?auto=format&fit=crop&q=80&w=800', 
-    location: 'Jakarta Pusat', 
-    availability: true, 
-    rating: 4.7, 
-    reviews: 51, 
-    specs: { Brand: 'Element', Tipe: 'Sepeda Lipat', Kecepatan: '8 Speed', 'Ukuran Roda': '20 inch' },
-    stock: 4
-  },
-
 
   // --- KATEGORI 4: MOMEN & PERAYAAN ---
   { 
@@ -241,21 +201,6 @@ export const INITIAL_PRODUCTS = [
     specs: { "Bahan": "Akrilik Kristal", "Daya": "LED 12W", "Diameter": "50cm" },
     stock: 2
   },
-  // Tambahan Kebaya
-  { 
-    id: '21', 
-    name: 'Sewa Kebaya Modern', 
-    category: 'Momen & Perayaan', 
-    description: 'Tampil anggun di hari spesialmu! Kebaya modern dengan desain kekinian, bahan adem dan nyaman.', 
-    pricePerDay: 175000, 
-    imageUrl: 'https://images.unsplash.com/photo-1588665519782-b7e802766029?auto=format&fit=crop&q=80&w=800', 
-    location: 'Depok', 
-    availability: false, 
-    rating: 4.9, 
-    reviews: 63, 
-    specs: { Ukuran: 'All size (M-L)', Warna: 'Rose Gold', Bahan: 'Brokat & Tulle' },
-    stock: 0
-  },
 
   // --- KATEGORI 5: RUMAH & HUNIAN ---
   { 
@@ -276,7 +221,7 @@ export const INITIAL_PRODUCTS = [
     id: '11', 
     name: 'Vacuum Cleaner Robot Xiaomi', 
     category: 'Rumah & Hunian', 
-    description: 'Malas nyapu? Sewa robot vacuum ini. Bisa nyapu dan ngepel otomatis. Sensor pintar anti nabrak. Lantai bersih kinclong tanpa capek.', 
+    description: 'Malas nyapu? Sewa robot vacuum ini. Bisa nyapu dan ngepel otomatis. Lantai bersih kinclong tanpa capek.', 
     pricePerDay: 60000, 
     imageUrl: robotImg, 
     location: 'Jakarta Utara', 
@@ -285,35 +230,6 @@ export const INITIAL_PRODUCTS = [
     reviews: 18,
     specs: { "Fitur": "Sweep & Mop", "Baterai": "120 Menit", "App": "Mi Home" },
     stock: 2
-  },
-  { 
-    id: '12', 
-    name: 'Kasur Lipat Inoac (Single)', 
-    category: 'Rumah & Hunian', 
-    description: 'Ada teman atau saudara menginap dadakan? Kasur lipat busa tebal ini solusinya. Empuk, bersih, dan cover selalu dicuci setelah sewa.', 
-    pricePerDay: 35000, 
-    imageUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&q=80&w=800', 
-    location: 'Bogor', 
-    availability: true, 
-    rating: 4.7, 
-    reviews: 25,
-    specs: { "Ukuran": "90x200cm", "Tebal": "10cm", "Cover": "Katun" },
-    stock: 4
-  },
-  // Tambahan Kosan
-  { 
-    id: '22', 
-    name: 'Kosan Eksklusif Deket MRT', 
-    category: 'Rumah & Hunian', 
-    description: 'Cari kosan nyaman dan strategis? Di sini tempatnya! Kamar fully furnished.', 
-    pricePerDay: 150000, 
-    imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000', 
-    location: 'Jakarta Selatan', 
-    availability: true, 
-    rating: 4.6, 
-    reviews: 25, 
-    specs: { Tipe: 'Kamar Kos', AC: 'Ya', WiFi: 'Ya', 'Kamar Mandi': 'Dalam', Perabot: 'Lengkap' },
-    stock: 1
   },
 
   // --- KATEGORI 6: ACARA & KELUARGA ---
@@ -358,21 +274,6 @@ export const INITIAL_PRODUCTS = [
     reviews: 40,
     specs: { "Power": "100 Watt", "Fitur": "Bass Boost", "Mic": "Input Ada" },
     stock: 3
-  },
-  // Tambahan Proyektor
-  { 
-    id: '23', 
-    name: 'Paket Nobar Proyektor', 
-    category: 'Acara & Keluarga', 
-    description: 'Bikin acara di rumah jadi seru! Paket sewa proyektor jernih Full HD plus layar gede 70 inch.', 
-    pricePerDay: 180000, 
-    imageUrl: 'https://images.unsplash.com/photo-1517604931442-71053e3e2e3c?auto=format&fit=crop&q=80&w=800', 
-    location: 'Bekasi', 
-    availability: true, 
-    rating: 4.7, 
-    reviews: 41, 
-    specs: { Item: 'Proyektor & Layar', Kecerahan: '3500 Lumens', Konektivitas: 'HDMI, USB', Ukuran_Layar: '70 inch' },
-    stock: 3
   }
 ];
 
@@ -382,7 +283,25 @@ export let mockReviews = {
         { id: 'r1-1', author: 'Budi', rating: 5, comment: 'Motornya mulus banget, tarikannya enteng. Penjualnya ramah, prosesnya cepet. Recommended!', type: 'positive' },
         { id: 'r1-2', author: 'Rina', rating: 4, comment: 'Overall oke, cuma jas hujannya agak kecil aja hehe. Tapi motornya mantap!', type: 'neutral' },
     ],
-    // ... Ulasan lainnya (seperti sebelumnya)
+    '2': [
+        { id: 'r2-1', author: 'ContentCreatorHits', rating: 5, comment: 'Gila, autofokusnya beneran dewa. Bikin vlog jadi gampang banget. Barangnya juga bersih kaya baru.', type: 'positive' },
+        { id: 'r2-2', author: 'Anak DKV', rating: 4, comment: 'Baterainya dapet satu, jadi harus pinter-pinter manage. Tapi buat kualitas gambar, ga ada lawan sih.', type: 'neutral' },
+    ],
+    '17': [
+        { id: 'r17-1', author: 'Youtuber Pemula', rating: 5, comment: 'Cahayanya terang banget, video jadi jernih. Softbox-nya bikin cahaya halus.', type: 'positive' }
+    ],
+    '13': [
+        { id: 'r13-1', author: 'Budi Karaoke', rating: 5, comment: 'Suaranya mantap! Bass-nya kerasa di dada. Baterai tahan lama buat party semalam.', type: 'positive' }
+    ],
+    '11': [
+        { id: 'r11-1', author: 'Ibu Rumah Tangga', rating: 4, comment: 'Membantu banget. Lantai jadi bersih. Cuma agak bingung setting map awalnya.', type: 'positive' }
+    ],
+    '14': [
+        { id: 'r14-1', author: 'Traveler', rating: 5, comment: 'Kopernya ringan tapi kuat. Roda lancar banget didorongnya.', type: 'positive' }
+    ],
+     '5': [
+        { id: 'r5-1', author: 'Sehat Selalu', rating: 5, comment: 'Udara di kamar jadi seger banget. Suara mesinnya halus, ga ganggu tidur.', type: 'positive' }
+    ]
 };
 
 // Fungsi untuk menambahkan ulasan baru secara dinamis
