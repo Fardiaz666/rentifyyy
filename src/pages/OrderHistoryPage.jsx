@@ -104,12 +104,31 @@ const OrderHistoryPage = ({ onBack }) => {
             case 'Menunggu Konfirmasi': return 'bg-yellow-100 text-yellow-800';
             case 'Siap Dikirim': return 'bg-blue-100 text-blue-800';
             case 'Dalam Pengiriman': return 'bg-purple-100 text-purple-800';
-            case 'Menunggu Penerimaan': return 'bg-orange-100 text-orange-800'; // BARU
-            case 'Selesai & Dana Cair': return 'bg-green-100 text-green-800'; // BARU
+            case 'Menunggu Penerimaan': return 'bg-orange-100 text-orange-800'; 
+            case 'Selesai & Dana Cair': return 'bg-green-100 text-green-800'; 
             case 'Dibatalkan': return 'bg-red-100 text-red-800';
             default: return 'bg-slate-100 text-slate-800';
         }
     };
+
+    // Kalkulasi Biaya Ringkasan yang Aman (Tambahan)
+    const calculateSummaryCosts = (order) => {
+        const serviceFee = 2000;
+        // Asumsi baseTotalPrice adalah total harga item tanpa biaya tambahan (dari Context sebelumnya)
+        // Kita hitung ulang Subtotal Harga Barang dari item array
+        const subtotalItems = order.items?.reduce((sum, item) => sum + (item.pricePerDay * (order.duration || 1)), 0) || 0;
+        
+        // Asumsi shippingCost dimasukkan ke dalam orderData saat checkout (atau default 15000 jika tidak ada)
+        const shippingCost = order.shippingCost || 15000; 
+
+        return {
+            subtotal: subtotalItems,
+            shipping: shippingCost,
+            service: serviceFee,
+            totalFinal: subtotalItems + shippingCost + serviceFee
+        };
+    };
+
 
     return (
         <motion.div 
@@ -158,101 +177,104 @@ const OrderHistoryPage = ({ onBack }) => {
                             <h3 className="text-xl font-bold text-slate-900 mb-2">Belum ada pesanan</h3>
                         </div>
                     ) : (
-                        filteredOrders.map((order) => (
-                            <motion.div 
-                                key={order.id}
-                                layout
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
-                            >
-                                {/* --- CARD HEADER (Selalu Muncul) --- */}
-                                <div 
-                                    onClick={() => toggleExpand(order.id)}
-                                    className="p-6 cursor-pointer hover:bg-slate-50/50 transition"
+                        filteredOrders.map((order) => {
+                            const summary = calculateSummaryCosts(order); // Hitung biaya dengan aman
+
+                            return (
+                                <motion.div 
+                                    key={order.id}
+                                    layout
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
                                 >
-                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${getStatusColor(order.status).replace('-100', '-500').replace('text-', 'bg-')}`}>
-                                                <ShoppingBag size={24} className="text-white"/>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Order ID: {order.id}</p>
-                                                <span className={`text-sm font-bold px-3 py-1 rounded-full border ${getStatusColor(order.status)}`}>
-                                                    {order.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="text-left sm:text-right">
-                                            <p className="text-xs text-slate-400 font-bold uppercase mb-1">Total Bayar</p>
-                                            <p className="text-xl font-black text-slate-900">{formatCurrency(order.total)}</p>
-                                            
-                                            {/* TOMBOL KIRIM KEMBALI */}
-                                            {isReadyToReturn(order.status) && (
-                                                <button 
-                                                    // Tombol ini muncul jika statusnya 'Dalam Pengiriman' (simulasi masa sewa habis)
-                                                    onClick={(e) => { e.stopPropagation(); handleOpenReturn(order); }}
-                                                    className="text-xs mt-2 font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
-                                                >
-                                                    KIRIM KEMBALI
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Footer Arrow */}
-                                    <div className="mt-4 flex justify-center">
-                                        {expandedOrder === order.id ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
-                                    </div>
-                                </div>
-
-                                {/* --- EXPANDED DETAILS --- */}
-                                <AnimatePresence>
-                                    {expandedOrder === order.id && (
-                                        <motion.div 
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            className="border-t border-slate-100 bg-white/50"
-                                        >
-                                            <div className="p-6 md:p-8 space-y-6">
-                                                <h4 className="font-bold text-slate-900 text-lg border-b pb-2">Rincian Barang & Pengiriman</h4>
-                                                
-                                                {/* Detail Barang */}
-                                                {order.items.map((item, idx) => (
-                                                    <div key={idx} className="flex items-center gap-4">
-                                                        <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-xl object-cover bg-slate-100" />
-                                                        <div className="flex-1">
-                                                            <p className="font-bold text-slate-800 text-sm">{item.name}</p>
-                                                            <p className="text-xs text-slate-500">{formatCurrency(item.pricePerDay)} x {order.duration || 1} hari</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                {/* Bukti Pengembalian (Jika sudah dikirim oleh pembeli) */}
-                                                {order.status === 'Menunggu Penerimaan' && (
-                                                    <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl space-y-2">
-                                                        <p className="text-sm font-bold text-orange-800 flex items-center gap-2">
-                                                            <Clock size={16} /> Barang Dalam Perjalanan Kembali
-                                                        </p>
-                                                        <p className="text-xs text-orange-600">Kurir: {order.returnDetails?.courier} • Resi: <b className="font-mono">{order.returnDetails?.resi}</b></p>
-                                                        <p className="text-xs text-orange-600">Mohon tunggu konfirmasi penerimaan dari pemilik barang.</p>
-                                                    </div>
-                                                )}
-
-                                                {/* Ringkasan Harga */}
-                                                <div className="border-t border-slate-100 pt-4">
-                                                    <div className="flex justify-between text-sm py-1"><span>Total Harga Barang</span><span>{formatCurrency(order.total - 17000)}</span></div>
-                                                    <div className="flex justify-between text-sm py-1"><span>Biaya Pengiriman</span><span>{order.shippingCost === 0 ? 'Gratis' : formatCurrency(15000)}</span></div>
-                                                    <div className="flex justify-between text-sm py-1"><span>Biaya Layanan</span><span>{formatCurrency(2000)}</span></div>
-                                                    <div className="flex justify-between text-base font-black pt-2 border-t border-slate-100 mt-2"><span>Total Bayar</span><span className="text-[#00c0d4]">{formatCurrency(order.total)}</span></div>
+                                    {/* --- CARD HEADER (Selalu Muncul) --- */}
+                                    <div 
+                                        onClick={() => toggleExpand(order.id)}
+                                        className="p-6 cursor-pointer hover:bg-slate-50/50 transition"
+                                    >
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${getStatusColor(order.status).replace('-100', '-500').replace('text-', 'bg-')}`}>
+                                                    <ShoppingBag size={24} className="text-white"/>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Order ID: {order.id}</p>
+                                                    <span className={`text-sm font-bold px-3 py-1 rounded-full border ${getStatusColor(order.status)}`}>
+                                                        {order.status}
+                                                    </span>
                                                 </div>
                                             </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-                        ))
+                                            <div className="text-left sm:text-right">
+                                                <p className="text-xs text-slate-400 font-bold uppercase mb-1">Total Bayar</p>
+                                                <p className="text-xl font-black text-slate-900">{formatCurrency(order.total)}</p>
+                                                
+                                                {/* TOMBOL KIRIM KEMBALI */}
+                                                {isReadyToReturn(order.status) && (
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); handleOpenReturn(order); }}
+                                                        className="text-xs mt-2 font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition"
+                                                    >
+                                                        KIRIM KEMBALI
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Footer Arrow */}
+                                        <div className="mt-4 flex justify-center">
+                                            {expandedOrder === order.id ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
+                                        </div>
+                                    </div>
+
+                                    {/* --- EXPANDED DETAILS --- */}
+                                    <AnimatePresence>
+                                        {expandedOrder === order.id && (
+                                            <motion.div 
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="border-t border-slate-100 bg-white/50"
+                                            >
+                                                <div className="p-6 md:p-8 space-y-6">
+                                                    <h4 className="font-bold text-slate-900 text-lg border-b pb-2">Rincian Barang & Pengiriman</h4>
+                                                    
+                                                    {/* Detail Barang */}
+                                                    {order.items?.map((item, idx) => ( // Gunakan optional chaining
+                                                        <div key={idx} className="flex items-center gap-4">
+                                                            <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-xl object-cover bg-slate-100" />
+                                                            <div className="flex-1">
+                                                                <p className="font-bold text-slate-800 text-sm">{item.name}</p>
+                                                                <p className="text-xs text-slate-500">{formatCurrency(item.pricePerDay || 0)} x {order.duration || 1} hari</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    {/* Bukti Pengembalian (Jika sudah dikirim oleh pembeli) */}
+                                                    {order.status === 'Menunggu Penerimaan' && (
+                                                        <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl space-y-2">
+                                                            <p className="text-sm font-bold text-orange-800 flex items-center gap-2">
+                                                                <Clock size={16} /> Barang Dalam Perjalanan Kembali
+                                                            </p>
+                                                            <p className="text-xs text-orange-600">Kurir: {order.returnDetails?.courier} • Resi: <b className="font-mono">{order.returnDetails?.resi}</b></p>
+                                                            <p className="text-xs text-orange-600">Mohon tunggu konfirmasi penerimaan dari pemilik barang.</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Ringkasan Harga (Menggunakan Summary yang Aman) */}
+                                                    <div className="border-t border-slate-100 pt-4">
+                                                        <div className="flex justify-between text-sm py-1"><span>Total Harga Barang</span><span>{formatCurrency(summary.subtotal)}</span></div>
+                                                        <div className="flex justify-between text-sm py-1"><span>Biaya Pengiriman</span><span>{summary.shipping === 0 ? 'Gratis' : formatCurrency(summary.shipping)}</span></div>
+                                                        <div className="flex justify-between text-sm py-1"><span>Biaya Layanan</span><span>{formatCurrency(summary.service)}</span></div>
+                                                        <div className="flex justify-between text-base font-black pt-2 border-t border-slate-100 mt-2"><span>Total Bayar</span><span className="text-[#00c0d4]">{formatCurrency(summary.totalFinal)}</span></div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            );
+                        })
                     )}
                 </div>
             </div>
