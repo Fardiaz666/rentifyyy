@@ -1,27 +1,75 @@
 import React, { createContext, useState } from 'react';
 // PENTING: Ambil data mentah (INITIAL_PRODUCTS) dari mockData
-import { INITIAL_PRODUCTS } from '../data/mockData'; 
+import { INITIAL_PRODUCTS, mockReviews } from '../data/mockData'; 
 
 export const CartContext = createContext();
 
-// Data awal dummy untuk Seller (agar dashboard tidak kosong saat pertama buka)
+// --- DATA AWAL SIMULASI ALUR PESANAN LENGKAP ---
+
+// Data dummy untuk Pembeli (Riwayat yang sudah terjadi)
+const INITIAL_BUYER_ORDERS = [
+    { 
+        id: 'B-1005', 
+        item: 'Stroller Doona+ (Car Seat)', 
+        items: [{name: 'Stroller Doona+', pricePerDay: 150000, location: 'JKT Sel'}],
+        date: '10 Jan 2025', 
+        status: 'Selesai & Dana Cair', // Pesanan Selesai (Dana Cair)
+        total: 180000, 
+        duration: 3, 
+        shippingCost: 15000,
+    },
+    { 
+        id: 'B-1004', 
+        item: 'Kamera Sony A7III', 
+        items: [{name: 'Kamera Sony A7III', pricePerDay: 350000, location: 'TNG Sel'}],
+        date: '15 Jan 2025', 
+        status: 'Menunggu Penerimaan', // Barang sudah dikirim balik oleh pembeli
+        total: 400000, 
+        duration: 2, 
+        shippingCost: 15000,
+        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE' }
+    },
+    { 
+        id: 'B-1003', 
+        item: 'Vespa Matic Sprint S 150', 
+        items: [{name: 'Vespa Matic Sprint S', pricePerDay: 175000, location: 'JKT Sel'}],
+        date: '20 Jan 2025', 
+        status: 'Dalam Pengiriman', // Barang sedang dipakai/masa sewa aktif
+        total: 200000, 
+        duration: 1, 
+        shippingCost: 15000,
+    },
+];
+
+// Data dummy untuk Seller (Pesanan Masuk)
 const INITIAL_SELLER_ORDERS = [
     { 
         id: 'INV-103', 
         item: 'Sony A7III + Lensa GM', 
         customer: 'Budi Santoso', 
         date: '8 Des 2025', 
-        status: 'Menunggu Konfirmasi', 
+        status: 'Menunggu Konfirmasi', // Perlu Tindakan: Terima/Tolak
         total: 350000, 
         location: 'Tangerang Selatan', 
         due: '12 Jam' 
+    },
+    { 
+        id: 'INV-104', 
+        item: 'Kamera Sony A7III', 
+        customer: 'John Doe (Pembeli)', 
+        date: '15 Jan 2025', 
+        status: 'Menunggu Penerimaan', // Perlu Tindakan: Konfirmasi Diterima
+        total: 400000, 
+        location: 'Tangerang Selatan', 
+        due: 'Sudah Kembali',
+        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE' }
     },
     { 
         id: 'INV-102', 
         item: 'Kursi Futura + Cover (20 Pcs)', 
         customer: 'Ibu Rina', 
         date: '7 Des 2025', 
-        status: 'Siap Dikirim', 
+        status: 'Siap Dikirim', // Perlu Tindakan: Input Resi
         total: 100000, 
         location: 'Bekasi', 
         due: 'Besok' 
@@ -29,15 +77,15 @@ const INITIAL_SELLER_ORDERS = [
 ];
 
 export const CartProvider = ({ children }) => {
-    // --- Global Product State (Untuk Homepage, Katalog, dan Seller Product Mgmt) ---
     const [allProducts, setAllProducts] = useState(INITIAL_PRODUCTS);
     
     // --- Buyer State ---
     const [cart, setCart] = useState([]);
-    const [orders, setOrders] = useState([]); // Riwayat Pembeli
+    // Menggunakan data riwayat yang kompleks
+    const [orders, setOrders] = useState(INITIAL_BUYER_ORDERS); 
 
     // --- Seller State ---
-    const [sellerOrders, setSellerOrders] = useState(INITIAL_SELLER_ORDERS); // Pesanan Masuk Penjual
+    const [sellerOrders, setSellerOrders] = useState(INITIAL_SELLER_ORDERS); 
 
     const addToCart = (product) => {
         setCart([...cart, product]);
@@ -61,7 +109,7 @@ export const CartProvider = ({ children }) => {
         const newSellerOrder = {
             id: orderData.id,
             item: orderData.items.length > 1 ? `${orderData.items[0].name} (+${orderData.items.length - 1} lainnya)` : orderData.items[0].name,
-            customer: "John Doe (Anda)",
+            customer: "Anda", // Pembeli yang sedang login
             date: orderData.date,
             status: 'Menunggu Konfirmasi', // Status awal untuk penjual
             total: orderData.total,
@@ -70,14 +118,12 @@ export const CartProvider = ({ children }) => {
         };
 
         setSellerOrders([newSellerOrder, ...sellerOrders]);
-
-        // 3. Kosongkan Keranjang
         setCart([]);
     };
     
-    // --- FUNGSI PENGEMBALIAN BARANG (BARU) ---
+    // --- FUNGSI PENGEMBALIAN BARANG (ALUR KRITIS) ---
 
-    // 1. Pembeli menandai barang siap dikembalikan (Sisi Pembeli)
+    // 1. Pembeli menandai barang siap dikembalikan
     const markOrderAsReturned = (orderId, returnDetails) => {
         // Update di Riwayat Pembeli
         setOrders(orders.map(order => 
@@ -89,7 +135,7 @@ export const CartProvider = ({ children }) => {
         ));
     };
 
-    // 2. Penjual mengkonfirmasi barang sudah diterima (Sisi Penjual)
+    // 2. Penjual mengkonfirmasi barang sudah diterima
     const confirmOrderReceived = (orderId) => {
         // Update status di Riwayat Pembeli
         setOrders(orders.map(order => 
@@ -100,7 +146,7 @@ export const CartProvider = ({ children }) => {
             order.id === orderId ? { ...order, status: 'Selesai & Dana Cair' } : order
         ));
         
-        // Tambahkan logika pencairan dana ke saldo penjual di sini (Simulasi)
+        // SIMULASI: Tambahkan dana ke saldo penjual di sini (jika ada state saldo)
     };
     
     // --- Fungsi Manajemen Produk (Seller) ---
@@ -127,7 +173,7 @@ export const CartProvider = ({ children }) => {
         setAllProducts(allProducts.filter(p => p.id !== productId));
     };
 
-    // Fungsi Manajemen Order Seller (Terima/Tolak - Non-return)
+    // Fungsi Manajemen Order Seller (Terima/Tolak, Input Resi)
     const updateSellerOrderStatus = (orderId, newStatus) => {
         setSellerOrders(sellerOrders.map(order => 
             order.id === orderId ? { ...order, status: newStatus } : order
