@@ -1,18 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, Eye, ShoppingBag, ArrowUpRight, ArrowDownRight, Calendar, ArrowLeft } from 'lucide-react';
-import { formatCurrency } from '../utils/currency';
+import { TrendingUp, Users, Eye, ShoppingBag, ArrowUpRight, ArrowDownRight, ArrowLeft } from 'lucide-react';
+
+const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
 const SellerAnalyticsPage = ({ onPageChange }) => {
 
-    // Data Dummy untuk Grafik (7 Hari Terakhir)
+    // Data Dummy untuk Grafik (7 Hari Terakhir) - Menggunakan CSS Height
     const chartData = [
         { day: 'Sen', value: 150000, height: '30%' },
         { day: 'Sel', value: 300000, height: '60%' },
         { day: 'Rab', value: 100000, height: '20%' },
         { day: 'Kam', value: 450000, height: '80%' },
         { day: 'Jum', value: 250000, height: '50%' },
-        { day: 'Sab', value: 600000, height: '100%' }, // Paling tinggi
+        { day: 'Sab', value: 600000, height: '100%' }, 
         { day: 'Min', value: 500000, height: '85%' },
     ];
 
@@ -40,7 +41,6 @@ const SellerAnalyticsPage = ({ onPageChange }) => {
                 <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200">
                     <button className="px-4 py-2 bg-white shadow-sm rounded-lg text-xs font-bold text-slate-900">7 Hari</button>
                     <button className="px-4 py-2 text-slate-500 hover:text-slate-900 text-xs font-bold">30 Hari</button>
-                    <button className="px-4 py-2 text-slate-500 hover:text-slate-900 text-xs font-bold">Bulan Ini</button>
                 </div>
             </div>
 
@@ -120,12 +120,14 @@ const SellerAnalyticsPage = ({ onPageChange }) => {
                                         {formatCurrency(data.value)}
                                     </div>
                                     {/* Batang Grafik */}
-                                    <div 
-                                        className="w-full sm:w-12 bg-[#016ff8]/20 rounded-t-xl group-hover:bg-[#016ff8] transition-all duration-500 relative overflow-hidden"
-                                        style={{ height: data.height }}
+                                    <motion.div 
+                                        initial={{ height: 0 }}
+                                        animate={{ height: data.height }}
+                                        transition={{ duration: 0.8, delay: idx * 0.1 }}
+                                        className="w-full sm:w-12 bg-[#016ff8]/20 rounded-t-xl group-hover:bg-[#016ff8] transition-all duration-300 relative overflow-hidden"
                                     >
                                         <div className="absolute bottom-0 left-0 w-full h-1 bg-[#016ff8]/50"></div>
-                                    </div>
+                                    </motion.div>
                                 </div>
                                 <span className="text-xs font-bold text-slate-400 group-hover:text-[#016ff8] transition">{data.day}</span>
                             </div>
@@ -166,9 +168,7 @@ const SellerAnalyticsPage = ({ onPageChange }) => {
                         </p>
                     </div>
                 </div>
-
             </div>
-
         </motion.div>
     );
 };
