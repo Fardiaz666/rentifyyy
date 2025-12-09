@@ -6,6 +6,11 @@ import purifierImg from '../assets/air.jpeg';
 import kursiImg from '../assets/kursi.jpg';
 import vespaImg from '../assets/vespa.jpg';
 import ps5Img from '../assets/ps5.jpg';
+import jblImg from '../assets/jbl.jpg';
+import robotImg from '../assets/robot.jpg';
+import strollerImg from '../assets/stroller.jpg';
+import perosotanImg from '../assets/perosotan.jpg';
+import gendonganImg from '../assets/gendongan.jpg';
 
 // Data Kategori tetap di sini
 export const categories = [
@@ -26,7 +31,7 @@ export const INITIAL_PRODUCTS = [
     category: 'Bayi & Si Kecil', 
     description: 'Stroller revolusioner yang bisa jadi car seat dalam hitungan detik. Sangat praktis untuk traveling atau jalan-jalan di mall. Steril UV sebelum sewa.', 
     pricePerDay: 150000, 
-    imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800', 
+    imageUrl: strollerImg, 
     location: 'Jakarta Selatan', 
     availability: true, 
     rating: 5.0, 
@@ -40,7 +45,7 @@ export const INITIAL_PRODUCTS = [
     category: 'Bayi & Si Kecil', 
     description: 'Perosotan anak dengan bahan plastik aman dan kokoh. Cocok untuk playdate di rumah.', 
     pricePerDay: 75000, 
-    imageUrl: 'https://images.unsplash.com/photo-1612454948037-368723c10a47?auto=format&fit=crop&q=80&w=800', 
+    imageUrl: perosotanImg, 
     location: 'Depok', 
     availability: true, 
     rating: 4.8, 
@@ -54,7 +59,7 @@ export const INITIAL_PRODUCTS = [
     category: 'Bayi & Si Kecil', 
     description: 'Gendongan bayi ergonomis, nyaman untuk orang tua dan bayi. Bisa 4 posisi gendong.', 
     pricePerDay: 50000, 
-    imageUrl: 'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&q=80&w=800', 
+    imageUrl: gendonganImg, 
     location: 'Bekasi', 
     availability: true, 
     rating: 4.9, 
@@ -216,7 +221,7 @@ export const INITIAL_PRODUCTS = [
     category: 'Rumah & Hunian', 
     description: 'Malas nyapu? Sewa robot vacuum ini. Bisa nyapu dan ngepel otomatis. Sensor pintar anti nabrak. Lantai bersih kinclong tanpa capek.', 
     pricePerDay: 60000, 
-    imageUrl: 'https://images.unsplash.com/photo-1589820296156-2454b3a8630b?auto=format&fit=crop&q=80&w=800', 
+    imageUrl: robotImg, 
     location: 'Jakarta Utara', 
     availability: true, 
     rating: 4.6, 
@@ -274,7 +279,7 @@ export const INITIAL_PRODUCTS = [
     category: 'Acara & Keluarga', 
     description: 'Speaker bluetooth dengan bass nendang dan lampu RGB. Cocok buat karaokean di rumah atau acara outdoor kecil.', 
     pricePerDay: 125000, 
-    imageUrl: 'https://images.unsplash.com/photo-1629243702432-68696c2e3649?auto=format&fit=crop&q=80&w=800', 
+    imageUrl: jblImg, 
     location: 'Jakarta Selatan', 
     availability: true, 
     rating: 4.9, 
