@@ -1,18 +1,16 @@
 import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Clock, CheckCircle, MapPin, Truck, ArrowLeft, ShoppingBag, Eye, X, Send, XCircle } from 'lucide-react';
+import { Package, Clock, CheckCircle, MapPin, Truck, ArrowLeft, ShoppingBag, Eye, X, Send, XCircle, Copy, FileText } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
-import { CartContext } from '../context/CartContext'; // 1. Import Context
+import { CartContext } from '../context/CartContext'; // Import Context
 
 const SellerOrdersPage = ({ onPageChange }) => { 
-    // 2. AMBIL DATA & FUNGSI UPDATE DARI CONTEXT
-    // sellerOrders: Data pesanan yang masuk (dari mock awal + checkout baru)
-    // updateSellerOrderStatus: Fungsi untuk ubah status (Menunggu -> Siap Kirim -> dll)
-    const { sellerOrders, updateSellerOrderStatus } = useContext(CartContext);
+    // AMBIL DATA & FUNGSI UPDATE DARI CONTEXT
+    const { sellerOrders, updateSellerOrderStatus, confirmOrderReceived } = useContext(CartContext);
     
-    // State Lokal untuk UI (Modal, Input Resi, Loading)
+    // State Lokal untuk UI
     const [selectedOrder, setSelectedOrder] = useState(null); 
-    const [showResiModal, setShowResiModal] = useState(false);
+    const [showResiModal, setShowResiModal] = useState(false); 
     const [resiInput, setResiInput] = useState('');
     const [processingId, setProcessingId] = useState(null); 
 
@@ -21,46 +19,58 @@ const SellerOrdersPage = ({ onPageChange }) => {
             case 'Menunggu Konfirmasi': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'Siap Dikirim': return 'bg-blue-100 text-blue-800 border-blue-200';
             case 'Dalam Pengiriman': return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'Selesai': return 'bg-green-100 text-green-800 border-green-200';
+            case 'Menunggu Penerimaan': return 'bg-orange-100 text-orange-800 border-orange-200'; 
+            case 'Selesai & Dana Cair': return 'bg-green-100 text-green-800 border-green-200'; 
             case 'Dibatalkan': return 'bg-red-100 text-red-800 border-red-200';
             default: return 'bg-slate-100 text-slate-800';
         }
     };
 
-    // --- ACTIONS MENGGUNAKAN GLOBAL STATE ---
+    // --- ACTIONS SISI PENJUAL ---
 
-    // 1. Terima Pesanan
+    // 1. Terima Pesanan (Konfirmasi)
     const handleConfirm = (id) => {
         if (window.confirm("Konfirmasi pesanan ini? Stok akan dikunci untuk penyewa.")) {
             setProcessingId(id);
             setTimeout(() => {
-                // Panggil fungsi global untuk update status
                 updateSellerOrderStatus(id, 'Siap Dikirim');
                 setProcessingId(null);
             }, 1000); 
         }
     };
+    
+    // 2. Konfirmasi Barang Diterima (Dari Pembeli)
+    const handleConfirmReceived = (id) => {
+        if (window.confirm("Konfirmasi barang telah DITERIMA dan sesuai kondisi? Dana akan segera dicairkan.")) {
+            setProcessingId(id);
+            setTimeout(() => {
+                confirmOrderReceived(id); // Memanggil fungsi global
+                setProcessingId(null);
+                alert("Penerimaan barang dikonfirmasi! Dana akan cair dalam 1x24 jam.");
+            }, 1500); 
+        }
+    };
 
-    // 2. Tolak Pesanan
+    // 3. Tolak Pesanan
     const handleReject = (id) => {
-        const reason = prompt("Masukkan alasan penolakan (misal: Stok rusak/habis):");
+        const reason = prompt("Masukkan alasan penolakan (Wajib):");
         if (reason) {
             updateSellerOrderStatus(id, 'Dibatalkan');
         }
     };
 
-    // 3. Input Resi
+    // 4. Input Resi (Membuka Modal)
     const openResiModal = (order) => {
         setSelectedOrder(order);
         setShowResiModal(true);
-        setResiInput('');
+        setResiInput(order.resi || ''); // Isi resi jika sudah ada
     };
 
+    // 5. Submit Resi
     const handleSubmitResi = (e) => {
         e.preventDefault();
         if (!resiInput.trim()) return alert("Nomor resi tidak boleh kosong!");
 
-        // Update status menjadi Dalam Pengiriman
         updateSellerOrderStatus(selectedOrder.id, 'Dalam Pengiriman');
         
         setShowResiModal(false);
@@ -68,7 +78,7 @@ const SellerOrdersPage = ({ onPageChange }) => {
         alert(`Resi ${resiInput} berhasil diinput. Status pesanan diperbarui.`);
     };
 
-    // 4. Detail Modal
+    // 6. Detail Modal
     const openDetailModal = (order) => {
         setSelectedOrder(order);
     };
@@ -76,6 +86,12 @@ const SellerOrdersPage = ({ onPageChange }) => {
     const closeModals = () => {
         setSelectedOrder(null);
         setShowResiModal(false);
+    };
+
+    // Helper Copy text
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert('Disalin!');
     };
 
     return (
@@ -105,7 +121,6 @@ const SellerOrdersPage = ({ onPageChange }) => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-100 text-sm">
-                        {/* 3. Render Data dari Context (sellerOrders) */}
                         {sellerOrders.length === 0 ? (
                             <tr>
                                 <td colSpan="4" className="py-10 text-center text-slate-400">
@@ -136,16 +151,13 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                         <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${getStatusColor(order.status)}`}>
                                             {order.status}
                                         </span>
-                                        {order.status === 'Menunggu Konfirmasi' && (
-                                            <p className="text-[10px] text-red-500 mt-1 font-bold flex items-center gap-1">
-                                                <Clock size={10} /> Perlu Tindakan
-                                            </p>
-                                        )}
+                                        {order.status === 'Menunggu Konfirmasi' && <p className="text-[10px] text-red-500 mt-1 font-bold flex items-center gap-1"><Clock size={10} /> Segera Proses</p>}
+                                        {order.status === 'Menunggu Penerimaan' && <p className="text-[10px] text-orange-600 mt-1 font-bold flex items-center gap-1"><Truck size={10} /> Barang Dikirim Balik</p>}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-2">
                                             
-                                            {/* Logic Tombol Aksi Berdasarkan Status */}
+                                            {/* KONDISI 1: Menunggu Konfirmasi */}
                                             {order.status === 'Menunggu Konfirmasi' && (
                                                 <>
                                                     <button 
@@ -165,6 +177,7 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                                 </>
                                             )}
 
+                                            {/* KONDISI 2: Siap Dikirim */}
                                             {order.status === 'Siap Dikirim' && (
                                                 <button 
                                                     onClick={() => openResiModal(order)}
@@ -173,7 +186,20 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                                     <Truck size={14} /> Input Resi
                                                 </button>
                                             )}
+                                            
+                                            {/* KONDISI 3: Menunggu Penerimaan */}
+                                            {order.status === 'Menunggu Penerimaan' && (
+                                                <button 
+                                                    onClick={() => handleConfirmReceived(order.id)}
+                                                    disabled={processingId === order.id}
+                                                    className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition shadow-sm flex items-center gap-1"
+                                                    title="Konfirmasi Barang Diterima"
+                                                >
+                                                    {processingId === order.id ? 'Memproses...' : <><CheckCircle size={14} /> Diterima</>}
+                                                </button>
+                                            )}
 
+                                            {/* Tombol Detail (Selalu Ada) */}
                                             <button 
                                                 onClick={() => openDetailModal(order)}
                                                 className="text-slate-500 hover:text-[#14e9ff] p-2 hover:bg-slate-100 rounded-lg transition"
@@ -204,36 +230,46 @@ const SellerOrdersPage = ({ onPageChange }) => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                                <h3 className="font-black text-slate-900 text-lg">Detail Pesanan</h3>
+                                <h3 className="font-black text-slate-900 text-lg">Detail Pesanan {selectedOrder.id}</h3>
                                 <button onClick={closeModals}><X size={20} className="text-slate-400 hover:text-slate-900" /></button>
                             </div>
                             <div className="p-6 space-y-4 text-sm">
-                                <div>
-                                    <p className="text-xs text-slate-400 uppercase font-bold">Produk</p>
-                                    <p className="font-bold text-slate-900 text-base">{selectedOrder.item}</p>
-                                    <p className="text-slate-500">{selectedOrder.id} • {selectedOrder.date}</p>
+                                
+                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <p className="text-xs text-slate-400 uppercase font-bold">Status Saat Ini</p>
+                                    <p className={`font-bold text-base mt-1 ${getStatusColor(selectedOrder.status)}`}>
+                                        {selectedOrder.status}
+                                    </p>
                                 </div>
+
+                                <div>
+                                    <p className="text-xs text-slate-400 uppercase font-bold">Total & Pembayaran</p>
+                                    <p className="font-bold text-base text-[#00c0d4]">{formatCurrency(selectedOrder.total)}</p>
+                                    <p className="text-slate-500">Metode: Transfer Bank</p>
+                                </div>
+                                
                                 <div>
                                     <p className="text-xs text-slate-400 uppercase font-bold">Penyewa</p>
                                     <p className="font-bold text-slate-900">{selectedOrder.customer}</p>
                                     <p className="text-slate-500">{selectedOrder.phone || '-'}</p>
                                 </div>
-                                <div>
-                                    <p className="text-xs text-slate-400 uppercase font-bold">Alamat Pengiriman</p>
-                                    <p className="text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 mt-1">
-                                        {selectedOrder.location || 'Alamat sesuai profil pembeli'}
-                                    </p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-xs text-slate-400 uppercase font-bold">Kurir</p>
-                                        <p className="font-bold text-slate-900">{selectedOrder.shipping || 'Instan'}</p>
+                                
+                                {/* Detail Bukti Pengiriman (Resi/Kurir) */}
+                                {(selectedOrder.resi || selectedOrder.returnDetails) && (
+                                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                        <p className="text-xs text-blue-600 uppercase font-bold mb-1">Bukti Pengiriman</p>
+                                        <p className="font-bold text-blue-900 text-sm flex items-center gap-2">
+                                            Resi: {selectedOrder.resi || selectedOrder.returnDetails?.resi || 'N/A'} 
+                                            <button onClick={() => copyToClipboard(selectedOrder.resi || selectedOrder.returnDetails?.resi || '')} className="text-blue-500 hover:text-blue-700">
+                                                <Copy size={14} />
+                                            </button>
+                                        </p>
+                                        <p className="text-xs text-blue-600">
+                                            Kurir: {selectedOrder.shipping || selectedOrder.returnDetails?.courier || 'N/A'}
+                                        </p>
                                     </div>
-                                    <div>
-                                        <p className="text-xs text-slate-400 uppercase font-bold">Total</p>
-                                        <p className="font-bold text-[#00c0d4]">{formatCurrency(selectedOrder.total)}</p>
-                                    </div>
-                                </div>
+                                )}
+                                
                             </div>
                             <div className="p-4 border-t border-slate-100 flex justify-end">
                                 <button onClick={closeModals} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition">Tutup</button>
@@ -255,7 +291,7 @@ const SellerOrdersPage = ({ onPageChange }) => {
                             className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6"
                         >
                             <h3 className="font-black text-slate-900 text-lg mb-2">Input Resi Pengiriman</h3>
-                            <p className="text-sm text-slate-500 mb-4">Masukkan nomor resi untuk pesanan <b>{selectedOrder.id}</b>.</p>
+                            <p className="text-sm text-slate-500 mb-4">Pesanan <b>{selectedOrder.id}</b></p>
                             
                             <form onSubmit={handleSubmitResi}>
                                 <input 
