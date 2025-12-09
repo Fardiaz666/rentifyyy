@@ -3,104 +3,99 @@ import { INITIAL_PRODUCTS } from '../data/mockData';
 
 export const CartContext = createContext();
 
-// --- DATA AWAL SIMULASI (DIPERBAIKI) ---
+// --- DATA AWAL YANG DISINKRONKAN (PENTING) ---
+// Agar simulasi berjalan lancar, ID pesanan di Pembeli dan Penjual harus SAMA.
 
-// Data dummy untuk Pembeli (Riwayat yang sudah terjadi)
-const INITIAL_BUYER_ORDERS = [
-    { 
-        id: 'B-1005', 
-        date: '10 Jan 2025', 
-        status: 'Selesai & Dana Cair', 
-        total: 180000, 
-        duration: 3, 
-        shipping: 'Kurir Instan',
-        paymentMethod: 'Transfer Bank',
-        shippingCost: 15000,
-        // PERBAIKAN: Struktur items harus lengkap dengan imageUrl
-        items: [
-            {
-                id: '1',
-                name: 'Stroller Doona+ (Car Seat & Stroller)', 
-                pricePerDay: 150000, 
-                imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800',
-                location: 'Jakarta Selatan'
-            }
-        ],
-    },
-    { 
-        id: 'B-1004', 
-        date: '15 Jan 2025', 
-        status: 'Menunggu Penerimaan', 
-        total: 400000, 
-        duration: 2, 
-        shipping: 'Ambil Sendiri',
-        paymentMethod: 'E-Wallet',
-        shippingCost: 0,
-        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE' },
-        items: [
-            {
-                id: '2',
-                name: 'Paket Sony A7III + Lensa G-Master', 
-                pricePerDay: 350000, 
-                imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800',
-                location: 'Tangerang Selatan'
-            }
-        ],
-    },
-    { 
-        id: 'B-1003', 
-        date: '20 Jan 2025', 
-        status: 'Dalam Pengiriman', 
-        total: 200000, 
-        duration: 1, 
-        shipping: 'Kurir Instan',
-        paymentMethod: 'QRIS',
-        shippingCost: 15000,
-        items: [
-            {
-                id: '7',
-                name: 'Vespa Matic Sprint S 150', 
-                pricePerDay: 175000, 
-                imageUrl: 'https://images.unsplash.com/photo-1609630875171-b1321377ee53?auto=format&fit=crop&q=80&w=800', // Ganti ke URL stabil jika asset lokal bermasalah
-                location: 'Jakarta Selatan'
-            }
-        ],
-    },
-];
+// 1. Pesanan yang sudah SELESAI
+const ORDER_1 = {
+    id: 'ORD-101',
+    date: '10 Jan 2025',
+    total: 180000,
+    status: 'Selesai & Dana Cair',
+    item_name: 'Stroller Doona+ (Car Seat & Stroller)',
+    location: 'Jakarta Selatan',
+    customer: 'Budi Santoso',
+    items: [{ id: '1', name: 'Stroller Doona+ (Car Seat & Stroller)', pricePerDay: 150000, imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800' }],
+    shipping: 'Kurir Instan',
+    paymentMethod: 'Transfer Bank',
+    duration: 3,
+    shippingCost: 15000
+};
 
-// Data dummy untuk Seller (Pesanan Masuk)
+// 2. Pesanan yang SEDANG DIKEMBALIKAN (Menunggu Konfirmasi Penjual)
+const ORDER_2 = {
+    id: 'ORD-102',
+    date: '15 Jan 2025',
+    total: 400000,
+    status: 'Menunggu Penerimaan', // Status penting untuk demo fitur ini
+    item_name: 'Kamera Sony A7III + Lensa G-Master',
+    location: 'Tangerang Selatan',
+    customer: 'John Doe (Anda)',
+    items: [{ id: '2', name: 'Paket Sony A7III + Lensa G-Master', pricePerDay: 350000, imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800' }],
+    shipping: 'Ambil Sendiri',
+    paymentMethod: 'E-Wallet',
+    duration: 2,
+    shippingCost: 0,
+    returnDetails: { resi: 'JPX-88219922', courier: 'JNE Regular' } // Data resi simulasi
+};
+
+// 3. Pesanan yang DALAM PENGIRIMAN (Siap untuk dikembalikan oleh Pembeli)
+const ORDER_3 = {
+    id: 'ORD-103',
+    date: '20 Jan 2025',
+    total: 200000,
+    status: 'Dalam Pengiriman', // Status agar tombol "Kirim Kembali" muncul di sisi pembeli
+    item_name: 'Vespa Matic Sprint S 150',
+    location: 'Jakarta Selatan',
+    customer: 'Siti Aminah',
+    items: [{ id: '7', name: 'Vespa Matic Sprint S 150', pricePerDay: 175000, imageUrl: 'https://images.unsplash.com/photo-1609630875171-b1321377ee53?auto=format&fit=crop&q=80&w=800' }],
+    shipping: 'Kurir Instan',
+    paymentMethod: 'QRIS',
+    duration: 1,
+    shippingCost: 15000
+};
+
+
+// --- INITIAL STATE UNTUK PEMBELI ---
+const INITIAL_BUYER_ORDERS = [ORDER_1, ORDER_2, ORDER_3];
+
+// --- INITIAL STATE UNTUK PENJUAL ---
+// Kita format sedikit agar sesuai tampilan tabel penjual, tapi ID-nya SAMA.
 const INITIAL_SELLER_ORDERS = [
     { 
-        id: 'INV-103', 
-        item: 'Sony A7III + Lensa GM', 
+        id: ORDER_2.id, // ORD-102
+        item: ORDER_2.item_name, 
+        customer: ORDER_2.customer, 
+        date: ORDER_2.date, 
+        status: ORDER_2.status, 
+        total: ORDER_2.total, 
+        location: ORDER_2.location,
+        shipping: ORDER_2.shipping,
+        returnDetails: ORDER_2.returnDetails, // Penting untuk seller lihat resi
+        due: 'Barang Kembali'
+    },
+    { 
+        id: ORDER_3.id, // ORD-103
+        item: ORDER_3.item_name, 
+        customer: ORDER_3.customer, 
+        date: ORDER_3.date, 
+        status: ORDER_3.status, 
+        total: ORDER_3.total, 
+        location: ORDER_3.location, 
+        shipping: ORDER_3.shipping,
+        due: '2 Hari Lagi' 
+    },
+    // Tambah satu pesanan baru khusus seller (Menunggu Konfirmasi)
+    { 
+        id: 'ORD-104', 
+        item: 'PlayStation 5', 
         customer: 'Budi Santoso', 
-        date: '8 Des 2025', 
+        date: '21 Jan 2025', 
         status: 'Menunggu Konfirmasi', 
-        total: 350000, 
-        location: 'Tangerang Selatan', 
+        total: 250000, 
+        location: 'Jakarta Timur', 
         due: '12 Jam' 
-    },
-    { 
-        id: 'INV-104', 
-        item: 'Kamera Sony A7III', 
-        customer: 'John Doe (Pembeli)', 
-        date: '15 Jan 2025', 
-        status: 'Menunggu Penerimaan', 
-        total: 400000, 
-        location: 'Tangerang Selatan', 
-        due: 'Sudah Kembali',
-        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE' }
-    },
-    { 
-        id: 'INV-102', 
-        item: 'Kursi Futura + Cover (20 Pcs)', 
-        customer: 'Ibu Rina', 
-        date: '7 Des 2025', 
-        status: 'Siap Dikirim', 
-        total: 100000, 
-        location: 'Bekasi', 
-        due: 'Besok' 
-    },
+    }
 ];
 
 export const CartContext = createContext();
@@ -108,11 +103,8 @@ export const CartContext = createContext();
 export const CartProvider = ({ children }) => {
     const [allProducts, setAllProducts] = useState(INITIAL_PRODUCTS);
     
-    // --- Buyer State ---
     const [cart, setCart] = useState([]);
-    const [orders, setOrders] = useState(INITIAL_BUYER_ORDERS); // Gunakan data dummy yang sudah diperbaiki
-
-    // --- Seller State ---
+    const [orders, setOrders] = useState(INITIAL_BUYER_ORDERS); 
     const [sellerOrders, setSellerOrders] = useState(INITIAL_SELLER_ORDERS); 
 
     const addToCart = (product) => {
@@ -128,18 +120,22 @@ export const CartProvider = ({ children }) => {
         setCart(cart.filter((_, index) => index !== indexToRemove));
     };
 
-    // FUNGSI CHECKOUT
+    // --- FUNGSI CHECKOUT ---
     const addOrder = (orderData) => {
+        // 1. Masukkan ke Riwayat Pembeli
         setOrders([orderData, ...orders]);
         
+        // 2. Masukkan ke Dashboard Penjual (Sinkronisasi)
         const newSellerOrder = {
             id: orderData.id,
             item: orderData.items.length > 1 ? `${orderData.items[0].name} (+${orderData.items.length - 1} lainnya)` : orderData.items[0].name,
-            customer: "Anda", 
+            customer: "John Doe (Anda)", 
             date: orderData.date,
             status: 'Menunggu Konfirmasi',
             total: orderData.total,
-            location: orderData.items[0].location,
+            location: orderData.items[0].location || 'Jakarta',
+            shipping: orderData.shipping,
+            paymentMethod: orderData.paymentMethod,
             due: '24 Jam'
         };
 
@@ -147,21 +143,27 @@ export const CartProvider = ({ children }) => {
         setCart([]);
     };
     
-    // --- FUNGSI PENGEMBALIAN BARANG ---
+    // --- FUNGSI PENGEMBALIAN BARANG (SINKRON) ---
+    // Dipanggil oleh Pembeli
     const markOrderAsReturned = (orderId, returnDetails) => {
-        setOrders(orders.map(order => 
+        // Update sisi Pembeli
+        setOrders(prevOrders => prevOrders.map(order => 
             order.id === orderId ? { ...order, status: 'Menunggu Penerimaan', returnDetails } : order
         ));
-        setSellerOrders(sellerOrders.map(order => 
+        // Update sisi Penjual (Agar muncul tombol 'Konfirmasi Diterima')
+        setSellerOrders(prevSellerOrders => prevSellerOrders.map(order => 
             order.id === orderId ? { ...order, status: 'Menunggu Penerimaan', returnDetails } : order
         ));
     };
 
+    // Dipanggil oleh Penjual
     const confirmOrderReceived = (orderId) => {
-        setOrders(orders.map(order => 
+        // Update sisi Pembeli
+        setOrders(prevOrders => prevOrders.map(order => 
             order.id === orderId ? { ...order, status: 'Selesai & Dana Cair' } : order
         ));
-        setSellerOrders(sellerOrders.map(order => 
+        // Update sisi Penjual
+        setSellerOrders(prevSellerOrders => prevSellerOrders.map(order => 
             order.id === orderId ? { ...order, status: 'Selesai & Dana Cair' } : order
         ));
     };
@@ -191,7 +193,12 @@ export const CartProvider = ({ children }) => {
     };
 
     const updateSellerOrderStatus = (orderId, newStatus) => {
-        setSellerOrders(sellerOrders.map(order => 
+        // Update Seller
+        setSellerOrders(prevSellerOrders => prevSellerOrders.map(order => 
+            order.id === orderId ? { ...order, status: newStatus } : order
+        ));
+        // Update Buyer juga agar sinkron (misal: Penjual klik 'Kirim', status di pembeli jadi 'Dalam Pengiriman')
+        setOrders(prevOrders => prevOrders.map(order => 
             order.id === orderId ? { ...order, status: newStatus } : order
         ));
     };
