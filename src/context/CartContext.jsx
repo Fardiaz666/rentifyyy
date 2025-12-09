@@ -1,43 +1,70 @@
 import React, { createContext, useState } from 'react';
-// PENTING: Ambil data mentah (INITIAL_PRODUCTS) dari mockData
-import { INITIAL_PRODUCTS, mockReviews } from '../data/mockData'; 
+import { INITIAL_PRODUCTS } from '../data/mockData'; 
 
 export const CartContext = createContext();
 
-// --- DATA AWAL SIMULASI ALUR PESANAN LENGKAP ---
+// --- DATA AWAL SIMULASI (DIPERBAIKI) ---
 
 // Data dummy untuk Pembeli (Riwayat yang sudah terjadi)
 const INITIAL_BUYER_ORDERS = [
     { 
         id: 'B-1005', 
-        item: 'Stroller Doona+ (Car Seat)', 
-        items: [{name: 'Stroller Doona+', pricePerDay: 150000, location: 'JKT Sel'}],
         date: '10 Jan 2025', 
-        status: 'Selesai & Dana Cair', // Pesanan Selesai (Dana Cair)
+        status: 'Selesai & Dana Cair', 
         total: 180000, 
         duration: 3, 
+        shipping: 'Kurir Instan',
+        paymentMethod: 'Transfer Bank',
         shippingCost: 15000,
+        // PERBAIKAN: Struktur items harus lengkap dengan imageUrl
+        items: [
+            {
+                id: '1',
+                name: 'Stroller Doona+ (Car Seat & Stroller)', 
+                pricePerDay: 150000, 
+                imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800',
+                location: 'Jakarta Selatan'
+            }
+        ],
     },
     { 
         id: 'B-1004', 
-        item: 'Kamera Sony A7III', 
-        items: [{name: 'Kamera Sony A7III', pricePerDay: 350000, location: 'TNG Sel'}],
         date: '15 Jan 2025', 
-        status: 'Menunggu Penerimaan', // Barang sudah dikirim balik oleh pembeli
+        status: 'Menunggu Penerimaan', 
         total: 400000, 
         duration: 2, 
-        shippingCost: 15000,
-        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE' }
+        shipping: 'Ambil Sendiri',
+        paymentMethod: 'E-Wallet',
+        shippingCost: 0,
+        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE' },
+        items: [
+            {
+                id: '2',
+                name: 'Paket Sony A7III + Lensa G-Master', 
+                pricePerDay: 350000, 
+                imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800',
+                location: 'Tangerang Selatan'
+            }
+        ],
     },
     { 
         id: 'B-1003', 
-        item: 'Vespa Matic Sprint S 150', 
-        items: [{name: 'Vespa Matic Sprint S', pricePerDay: 175000, location: 'JKT Sel'}],
         date: '20 Jan 2025', 
-        status: 'Dalam Pengiriman', // Barang sedang dipakai/masa sewa aktif
+        status: 'Dalam Pengiriman', 
         total: 200000, 
         duration: 1, 
+        shipping: 'Kurir Instan',
+        paymentMethod: 'QRIS',
         shippingCost: 15000,
+        items: [
+            {
+                id: '7',
+                name: 'Vespa Matic Sprint S 150', 
+                pricePerDay: 175000, 
+                imageUrl: 'https://images.unsplash.com/photo-1609630875171-b1321377ee53?auto=format&fit=crop&q=80&w=800', // Ganti ke URL stabil jika asset lokal bermasalah
+                location: 'Jakarta Selatan'
+            }
+        ],
     },
 ];
 
@@ -48,7 +75,7 @@ const INITIAL_SELLER_ORDERS = [
         item: 'Sony A7III + Lensa GM', 
         customer: 'Budi Santoso', 
         date: '8 Des 2025', 
-        status: 'Menunggu Konfirmasi', // Perlu Tindakan: Terima/Tolak
+        status: 'Menunggu Konfirmasi', 
         total: 350000, 
         location: 'Tangerang Selatan', 
         due: '12 Jam' 
@@ -58,7 +85,7 @@ const INITIAL_SELLER_ORDERS = [
         item: 'Kamera Sony A7III', 
         customer: 'John Doe (Pembeli)', 
         date: '15 Jan 2025', 
-        status: 'Menunggu Penerimaan', // Perlu Tindakan: Konfirmasi Diterima
+        status: 'Menunggu Penerimaan', 
         total: 400000, 
         location: 'Tangerang Selatan', 
         due: 'Sudah Kembali',
@@ -69,20 +96,21 @@ const INITIAL_SELLER_ORDERS = [
         item: 'Kursi Futura + Cover (20 Pcs)', 
         customer: 'Ibu Rina', 
         date: '7 Des 2025', 
-        status: 'Siap Dikirim', // Perlu Tindakan: Input Resi
+        status: 'Siap Dikirim', 
         total: 100000, 
         location: 'Bekasi', 
         due: 'Besok' 
     },
 ];
 
+export const CartContext = createContext();
+
 export const CartProvider = ({ children }) => {
     const [allProducts, setAllProducts] = useState(INITIAL_PRODUCTS);
     
     // --- Buyer State ---
     const [cart, setCart] = useState([]);
-    // Menggunakan data riwayat yang kompleks
-    const [orders, setOrders] = useState(INITIAL_BUYER_ORDERS); 
+    const [orders, setOrders] = useState(INITIAL_BUYER_ORDERS); // Gunakan data dummy yang sudah diperbaiki
 
     // --- Seller State ---
     const [sellerOrders, setSellerOrders] = useState(INITIAL_SELLER_ORDERS); 
@@ -102,16 +130,14 @@ export const CartProvider = ({ children }) => {
 
     // FUNGSI CHECKOUT
     const addOrder = (orderData) => {
-        // 1. Masukkan ke Riwayat Pembeli
         setOrders([orderData, ...orders]);
         
-        // 2. Masukkan ke Pesanan Masuk Penjual (Simulasi)
         const newSellerOrder = {
             id: orderData.id,
             item: orderData.items.length > 1 ? `${orderData.items[0].name} (+${orderData.items.length - 1} lainnya)` : orderData.items[0].name,
-            customer: "Anda", // Pembeli yang sedang login
+            customer: "Anda", 
             date: orderData.date,
-            status: 'Menunggu Konfirmasi', // Status awal untuk penjual
+            status: 'Menunggu Konfirmasi',
             total: orderData.total,
             location: orderData.items[0].location,
             due: '24 Jam'
@@ -121,32 +147,23 @@ export const CartProvider = ({ children }) => {
         setCart([]);
     };
     
-    // --- FUNGSI PENGEMBALIAN BARANG (ALUR KRITIS) ---
-
-    // 1. Pembeli menandai barang siap dikembalikan
+    // --- FUNGSI PENGEMBALIAN BARANG ---
     const markOrderAsReturned = (orderId, returnDetails) => {
-        // Update di Riwayat Pembeli
         setOrders(orders.map(order => 
             order.id === orderId ? { ...order, status: 'Menunggu Penerimaan', returnDetails } : order
         ));
-        // Update di Pesanan Penjual
         setSellerOrders(sellerOrders.map(order => 
             order.id === orderId ? { ...order, status: 'Menunggu Penerimaan', returnDetails } : order
         ));
     };
 
-    // 2. Penjual mengkonfirmasi barang sudah diterima
     const confirmOrderReceived = (orderId) => {
-        // Update status di Riwayat Pembeli
         setOrders(orders.map(order => 
             order.id === orderId ? { ...order, status: 'Selesai & Dana Cair' } : order
         ));
-        // Update status di Pesanan Penjual
         setSellerOrders(sellerOrders.map(order => 
             order.id === orderId ? { ...order, status: 'Selesai & Dana Cair' } : order
         ));
-        
-        // SIMULASI: Tambahkan dana ke saldo penjual di sini (jika ada state saldo)
     };
     
     // --- Fungsi Manajemen Produk (Seller) ---
@@ -173,7 +190,6 @@ export const CartProvider = ({ children }) => {
         setAllProducts(allProducts.filter(p => p.id !== productId));
     };
 
-    // Fungsi Manajemen Order Seller (Terima/Tolak, Input Resi)
     const updateSellerOrderStatus = (orderId, newStatus) => {
         setSellerOrders(sellerOrders.map(order => 
             order.id === orderId ? { ...order, status: newStatus } : order
@@ -185,9 +201,9 @@ export const CartProvider = ({ children }) => {
     return (
         <CartContext.Provider value={{ 
             cart, addToCart, removeFromCart, totalPrice, 
-            orders, addOrder, markOrderAsReturned, confirmOrderReceived, // Buyer & Return Flow
-            allProducts, addProduct, updateProduct, deleteProduct, // Product Mgmt
-            sellerOrders, updateSellerOrderStatus // Seller Order Mgmt
+            orders, addOrder, markOrderAsReturned, confirmOrderReceived, 
+            allProducts, addProduct, updateProduct, deleteProduct, 
+            sellerOrders, updateSellerOrderStatus 
         }}>
             {children}
         </CartContext.Provider>
