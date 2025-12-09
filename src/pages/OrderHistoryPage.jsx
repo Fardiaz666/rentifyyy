@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Package, Clock, CheckCircle, MapPin, Truck, ShoppingBag, Eye, X, Send, XCircle, Copy, Calendar } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, MapPin, Truck, ShoppingBag, Send, Copy } from 'lucide-react';
 import { CartContext } from '../context/CartContext';
 import { formatCurrency } from '../utils/currency';
 
@@ -69,7 +69,7 @@ const ReturnModal = ({ isOpen, onClose, order, onConfirmReturn }) => {
 };
 
 const OrderHistoryPage = ({ onBack }) => {
-    // PROTEKSI 1: Default ke array kosong jika orders undefined
+    // Ambil data dari Context (tambahkan fallback array kosong [] biar aman)
     const { orders = [], markOrderAsReturned } = useContext(CartContext);
     
     const [filter, setFilter] = useState('Semua');
@@ -111,10 +111,9 @@ const OrderHistoryPage = ({ onBack }) => {
         }
     };
 
-    // PROTEKSI 3: Fungsi Kalkulasi Aman (Mencegah error NaN atau undefined property)
+    // Fungsi Kalkulasi Aman
     const calculateSummaryCosts = (order) => {
         const serviceFee = 2000;
-        // Gunakan optional chaining (?.) dan fallback || 0 untuk semua angka
         const items = Array.isArray(order.items) ? order.items : [];
         const subtotalItems = items.reduce((sum, item) => sum + ((item.pricePerDay || 0) * (order.duration || 1)), 0);
         const shippingCost = order.shippingCost || 15000; 
@@ -175,7 +174,6 @@ const OrderHistoryPage = ({ onBack }) => {
                         </div>
                     ) : (
                         filteredOrders.map((order) => {
-                            // Hitung ringkasan biaya untuk order ini dengan fungsi aman
                             const summary = calculateSummaryCosts(order);
                             const safeItems = Array.isArray(order.items) ? order.items : [];
 
@@ -206,9 +204,9 @@ const OrderHistoryPage = ({ onBack }) => {
                                             </div>
                                             <div className="text-left sm:text-right">
                                                 <p className="text-xs text-slate-400 font-bold uppercase mb-1">Total Bayar</p>
-                                                {/* PROTEKSI 4: Fallback untuk total */}
                                                 <p className="text-xl font-black text-slate-900">{formatCurrency(order.total || 0)}</p>
                                                 
+                                                {/* TOMBOL KIRIM KEMBALI */}
                                                 {isReadyToReturn(order.status) && (
                                                     <button 
                                                         onClick={(e) => { e.stopPropagation(); handleOpenReturn(order); }}
@@ -218,10 +216,6 @@ const OrderHistoryPage = ({ onBack }) => {
                                                     </button>
                                                 )}
                                             </div>
-                                        </div>
-                                        
-                                        <div className="mt-4 flex justify-center">
-                                            {expandedOrder === order.id ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
                                         </div>
                                     </div>
 
@@ -237,21 +231,15 @@ const OrderHistoryPage = ({ onBack }) => {
                                                 <div className="p-6 md:p-8 space-y-6">
                                                     <h4 className="font-bold text-slate-900 text-lg border-b pb-2">Rincian Barang & Pengiriman</h4>
                                                     
-                                                    {/* DETAIL BARANG (DENGAN PROTEKSI GAMBAR) */}
+                                                    {/* DETAIL BARANG (TANPA GAMBAR) */}
                                                     {safeItems.map((item, idx) => (
-                                                        <div key={idx} className="flex items-center gap-4">
-                                                            {/* PROTEKSI 5: Fallback Image jika imageUrl kosong/undefined */}
-                                                            <img 
-                                                                src={item.imageUrl || 'https://placehold.co/100x100/e0f2f1/009688?text=Produk'} 
-                                                                alt={item.name || 'Produk'} 
-                                                                className="w-16 h-16 rounded-xl object-cover bg-slate-100" 
-                                                                onError={(e) => { 
-                                                                    e.target.onerror = null; 
-                                                                    e.target.src = 'https://placehold.co/100x100/eeeeee/cccccc?text=Error'; 
-                                                                }}
-                                                            />
+                                                        <div key={idx} className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                                            {/* Ikon Barang sebagai pengganti gambar */}
+                                                            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-[#14e9ff] shadow-sm">
+                                                                <Package size={24} />
+                                                            </div>
                                                             <div className="flex-1">
-                                                                <p className="font-bold text-slate-800 text-sm">{item.name || 'Nama Produk Tidak Tersedia'}</p>
+                                                                <p className="font-bold text-slate-800 text-sm">{item.name || 'Nama Produk'}</p>
                                                                 <p className="text-xs text-slate-500">{formatCurrency(item.pricePerDay || 0)} x {order.duration || 1} hari</p>
                                                             </div>
                                                         </div>
@@ -264,7 +252,6 @@ const OrderHistoryPage = ({ onBack }) => {
                                                                 <Clock size={16} /> Barang Dalam Perjalanan Kembali
                                                             </p>
                                                             <p className="text-xs text-orange-600">Kurir: {order.returnDetails?.courier || '-'} • Resi: <b className="font-mono">{order.returnDetails?.resi || '-'}</b></p>
-                                                            <p className="text-xs text-orange-600">Mohon tunggu konfirmasi penerimaan dari pemilik barang.</p>
                                                         </div>
                                                     )}
 
@@ -286,7 +273,6 @@ const OrderHistoryPage = ({ onBack }) => {
                 </div>
             </div>
             
-            {/* Modal Pengembalian */}
             <ReturnModal 
                 isOpen={showReturnModal} 
                 onClose={() => setShowReturnModal(false)}
