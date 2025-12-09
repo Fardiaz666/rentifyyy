@@ -25,16 +25,14 @@ export default function App() {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [currentSearchTerm, setCurrentSearchTerm] = useState(''); 
-    
-    // State untuk menyimpan halaman tujuan setelah login (Redirect Intent)
     const [redirectAfterLogin, setRedirectAfterLogin] = useState(null);
 
-    // 1. Inisialisasi Login dari LocalStorage
+    // Inisialisasi Login dari LocalStorage
     const [isLoggedIn, setIsLoggedIn] = useState(() => {
         return localStorage.getItem('isLoggedIn') === 'true';
     });
     
-    // 2. Inisialisasi Role dari LocalStorage
+    // Inisialisasi Role
     const [userRole, setUserRole] = useState(() => {
         return localStorage.getItem('userRole') || 'buyer';
     });
@@ -42,11 +40,17 @@ export default function App() {
     // --- HANDLERS ---
 
     const handlePageChange = (newPage, searchData = '') => {
-        // Logika khusus: Jika ingin ke Seller tapi belum login
+        // 1. Logika Proteksi Halaman Seller
         if (newPage === 'seller' && !isLoggedIn) {
-            setRedirectAfterLogin('seller'); // Simpan niat user mau ke seller
-            setPage('auth'); // Buka halaman login
+            setRedirectAfterLogin('seller'); 
+            setPage('auth'); 
             return;
+        }
+
+        // 2. PERBAIKAN BUG: Auto-switch role jika user login mau masuk ke seller
+        if (newPage === 'seller' && isLoggedIn) {
+            setUserRole('seller');
+            localStorage.setItem('userRole', 'seller');
         }
 
         setPage(newPage);
@@ -66,43 +70,36 @@ export default function App() {
         if (isLoggedIn) {
             handlePageChange('checkout');
         } else {
-            setRedirectAfterLogin('checkout'); // Simpan niat user mau checkout
+            setRedirectAfterLogin('checkout'); 
             handlePageChange('auth');
         }
     };
 
-    // 3. FUNGSI LOGIN SUKSES (DIPERBAIKI)
     const handleLoginSuccess = () => {
         setIsLoggedIn(true);
         localStorage.setItem('isLoggedIn', 'true');
 
-        // Tentukan Role & Halaman Tujuan
         let targetPage = 'home';
         let role = 'buyer';
 
-        // Cek redirect intent
         if (redirectAfterLogin === 'checkout') {
             targetPage = 'checkout';
-            role = 'buyer'; // Tetap buyer
+            role = 'buyer'; 
         } else if (redirectAfterLogin === 'seller') {
             targetPage = 'seller';
-            role = 'seller'; // Jadi seller
+            role = 'seller'; 
         } else {
-            // Default login biasa (misal dari navbar) -> Tetap di halaman asal atau ke home
             targetPage = 'home';
             role = 'buyer';
         }
 
-        // Simpan Role & Reset Redirect
         setUserRole(role);
         localStorage.setItem('userRole', role);
-        setRedirectAfterLogin(null); // Reset
+        setRedirectAfterLogin(null); 
         
-        // Pindah Halaman
         handlePageChange(targetPage);
     };
 
-    // 4. Handle Logout
     const handleLogout = () => {
         setIsLoggedIn(false);
         setUserRole('buyer');
@@ -153,7 +150,6 @@ export default function App() {
         <CartProvider>
             <div className="min-h-screen bg-white text-slate-800 font-sans">
                 
-                {/* Navbar (Hanya Tampil di Buyer View) */}
                 {page !== 'auth' && page !== 'checkout' && !page.startsWith('seller') && (
                     <Navbar 
                         onPageChange={handlePageChange} 
@@ -163,7 +159,6 @@ export default function App() {
                     />
                 )}
                 
-                {/* Sidebar Keranjang */}
                 <AnimatePresence>
                     {isCartOpen && (
                         <CartSidebar 
@@ -174,11 +169,11 @@ export default function App() {
                     )}
                 </AnimatePresence>
                 
-                {/* Router */}
                 <AnimatePresence mode="wait">
                     
                     {/* LAYOUT PENJUAL */}
-                    {page.startsWith('seller') && isLoggedIn && userRole === 'seller' ? (
+                    {/* PERBAIKAN: Hapus syarat 'userRole === seller' di sini agar tidak blank */}
+                    {page.startsWith('seller') && isLoggedIn ? (
                         <SellerLayout key="seller-layout" onBack={() => handlePageChange('home')} onLogout={handleLogout} onPageChange={handlePageChange}>
                             <AnimatePresence mode="wait">
                                 {renderSellerContent()}
@@ -221,13 +216,6 @@ export default function App() {
                                     <button onClick={() => handlePageChange('home')} className="mt-4 text-[#14e9ff] font-bold hover:underline">Kembali ke Beranda</button>
                                 </div>
                             )}
-                            {/* Tambahkan fallback jika user mencoba akses 'seller' tapi belum login atau role salah */}
-                             {page.startsWith('seller') && (
-                                <div className="min-h-screen flex items-center justify-center">
-                                    <p>Mengalihkan...</p>
-                                    {/* Efek samping: redirect jika akses ilegal (sudah dihandle handlePageChange, ini backup) */}
-                                </div>
-                             )}
                         </>
                     )}
                 </AnimatePresence>
