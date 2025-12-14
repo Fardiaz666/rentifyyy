@@ -16,9 +16,11 @@ import SellerLayout from './pages/SellerLayout';
 import SellerOrdersPage from './pages/SellerOrdersPage'; 
 import SellerProductsPage from './pages/SellerProductsPage';
 import SellerFinancePage from './pages/SellerFinancePage'; 
-import SellerAnalyticsPage from './pages/SellerAnalyticsPage'; // Import Halaman Analisis
+import SellerAnalyticsPage from './pages/SellerAnalyticsPage'; 
 import { AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
+// 1. IMPORT FILE BARU
+import OrderSuccessPage from './pages/OrderSuccessPage'; 
 
 export default function App() {
     // --- STATE MANAGEMENT ---
@@ -140,7 +142,6 @@ export default function App() {
             case 'seller_finance': 
                 return <SellerFinancePage key="seller_finance" onPageChange={handlePageChange} />;
             case 'seller_analytics': 
-                // Menggunakan komponen SellerAnalyticsPage yang sudah dibuat
                 return <SellerAnalyticsPage key="seller_analytics" onPageChange={handlePageChange} />;
             default:
                 return <SellerDashboard key="seller_dashboard_default" onPageChange={handlePageChange} />;
@@ -150,10 +151,11 @@ export default function App() {
     // --- RENDER APLIKASI ---
     return (
         <CartProvider>
+            {/* Wrapper utama */}
             <div className="min-h-screen bg-white text-slate-800 font-sans">
                 
-                {/* Navbar */}
-                {page !== 'auth' && page !== 'checkout' && !page.startsWith('seller') && (
+                {/* Navbar (Hanya Tampil di Buyer View dan bukan halaman sukses) */}
+                {page !== 'auth' && page !== 'checkout' && page !== 'order_success' && !page.startsWith('seller') && (
                     <Navbar 
                         onPageChange={handlePageChange} 
                         onCartClick={() => setIsCartOpen(true)} 
@@ -199,8 +201,23 @@ export default function App() {
                                 <AuthPage key="auth" onBack={() => handlePageChange('home')} onLoginSuccess={handleLoginSuccess} />
                             )}
                             {page === 'checkout' && (
-                                <CheckoutPage key="checkout" onBack={() => handlePageChange('home')} onPaymentSuccess={() => handlePageChange('orders')} />
+                                <CheckoutPage 
+                                    key="checkout" 
+                                    onBack={() => handlePageChange('home')} 
+                                    // 2. UPDATE: Arahkan ke halaman success
+                                    onPaymentSuccess={() => handlePageChange('order_success')} 
+                                />
                             )}
+                            
+                            {/* 3. HALAMAN SUKSES (BARU) */}
+                            {page === 'order_success' && (
+                                <OrderSuccessPage 
+                                    key="order_success"
+                                    onGoToOrders={() => handlePageChange('orders')}
+                                    onBackToHome={() => handlePageChange('home')}
+                                />
+                            )}
+
                             {page === 'orders' && (
                                 <OrderHistoryPage key="orders" onBack={() => handlePageChange('home')} />
                             )}
@@ -213,6 +230,7 @@ export default function App() {
                             {page === 'security' && (
                                 <SecurityPage key="security" onBack={() => handlePageChange('settings')} />
                             )}
+                            
                             {page === 'wishlist' && (
                                 <div key="wishlist" className="min-h-screen pt-32 text-center bg-slate-50">
                                     <h2 className="text-2xl font-bold text-slate-800">Barang Disukai</h2>
