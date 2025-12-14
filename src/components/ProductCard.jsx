@@ -61,7 +61,7 @@ const ProductCard = ({ product, addToCart, onClick }) => {
                             addToCart(product);
                         }}
                         disabled={!product.availability}
-                        title={product.availability ? "Sewa Sekarang" : "Tidak Tersedia"}
+                        title={product.availability ? "Butuh hari ini? Cari yang terdekat" : "Tidak Tersedia"}
                         // UPDATE: Tombol Keranjang warna #016ff8
                         className={`p-3.5 rounded-2xl transition-all duration-300 hover:rotate-12 hover:shadow-lg flex items-center justify-center ${
                             product.availability 
