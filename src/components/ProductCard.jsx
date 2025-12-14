@@ -25,20 +25,17 @@ const ProductCard = ({ product, addToCart, onClick }) => {
                 </div>
                 {/* Badge Lokasi */}
                 <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
-                    {/* UPDATE: Ikon Lokasi warna #016ff8 */}
                     <MapPin size={10} className="text-[#016ff8]" /> {product.location}
                 </div>
             </div>
             
             <div className="p-6 flex flex-col flex-grow">
                 <div className="mb-3">
-                    {/* UPDATE: Badge Kategori warna #016ff8 */}
                     <span className="text-[10px] font-bold tracking-wider text-[#016ff8] uppercase bg-[#016ff8]/10 px-2 py-1 rounded-md inline-block">
                         {product.category}
                     </span>
                 </div>
 
-                {/* UPDATE: Judul Produk Hover warna #016ff8 */}
                 <h3 className="font-bold text-slate-900 text-lg leading-snug mb-2 group-hover:text-[#016ff8] transition line-clamp-2">
                     {product.name}
                 </h3>
@@ -49,27 +46,39 @@ const ProductCard = ({ product, addToCart, onClick }) => {
                     <span className="text-slate-400">({product.reviews || 0} review)</span>
                 </div>
 
-                <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-50">
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium mb-0.5">Mulai dari</p>
-                        <p className="text-xl font-black text-slate-900">{formatCurrency(product.pricePerDay)}</p>
+                <div className="mt-auto pt-4 border-t border-slate-50">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <p className="text-xs text-slate-400 font-medium mb-0.5">Mulai dari</p>
+                            <p className="text-xl font-black text-slate-900">{formatCurrency(product.pricePerDay)}</p>
+                        </div>
+                        {/* Tombol Keranjang Kecil */}
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                            }}
+                            className="bg-slate-100 text-slate-900 hover:bg-[#016ff8] hover:text-white p-3 rounded-xl transition-all duration-300"
+                        >
+                            <ShoppingCart size={20} />
+                        </button>
                     </div>
-                    {/* Tombol Keranjang (Stop Propagation agar tidak memicu klik detail) */}
+                    
+                    {/* UPDATE CTA: Teks Lebih Persuasif */}
                     <button 
                         onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(product);
+                            e.stopPropagation(); // Mencegah klik detail
+                            // Logic bisa diarahkan ke search lokasi atau langsung sewa
+                            addToCart(product); 
                         }}
                         disabled={!product.availability}
-                        title={product.availability ? "Butuh hari ini? Cari yang terdekat" : "Tidak Tersedia"}
-                        // UPDATE: Tombol Keranjang warna #016ff8
-                        className={`p-3.5 rounded-2xl transition-all duration-300 hover:rotate-12 hover:shadow-lg flex items-center justify-center ${
+                        className={`w-full py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
                             product.availability 
-                            ? 'bg-slate-100 text-slate-900 hover:bg-[#016ff8] hover:text-white' 
-                            : 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                            ? 'bg-[#016ff8]/10 text-[#016ff8] hover:bg-[#016ff8] hover:text-white' 
+                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                         }`}
                     >
-                        <ShoppingCart size={20} />
+                        {product.availability ? "Butuh hari ini? Cari yang terdekat." : "Tidak Tersedia"}
                     </button>
                 </div>
             </div>
