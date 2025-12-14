@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Lock, Truck, CreditCard, CheckCircle, Store, ChevronRight, QrCode, Wallet, Copy, Clock, Calendar } from 'lucide-react';
+import { ArrowLeft, Lock, Truck, CreditCard, CheckCircle, Store, ChevronRight, QrCode, Wallet, Copy, Clock, Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
 import { CartContext } from '../context/CartContext';
 import { formatCurrency } from '../utils/currency';
 
@@ -24,13 +24,15 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
     
     const [step, setStep] = useState('details'); 
     const [isProcessing, setIsProcessing] = useState(false);
+    // STATE BARU: Simulasi Error
+    const [paymentError, setPaymentError] = useState(false);
     
-    // --- STATE DURASI SEWA ---
+    // State Durasi
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [duration, setDuration] = useState(1); // Default 1 hari
+    const [duration, setDuration] = useState(1); 
 
-    // --- STATE PEMBAYARAN & PENGIRIMAN ---
+    // State Pembayaran
     const [paymentCategory, setPaymentCategory] = useState('bca'); 
     const [selectedBank, setSelectedBank] = useState(BANKS[0]);
     const [selectedWallet, setSelectedWallet] = useState(WALLETS[0]);
@@ -39,33 +41,28 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
     const [virtualNumber, setVirtualNumber] = useState('');
     const [orderId] = useState(`ORD-${Math.floor(Math.random() * 1000000)}`);
 
-    // --- KALKULASI DURASI OTOMATIS ---
+    // Kalkulasi Durasi
     useEffect(() => {
         if (startDate && endDate) {
             const start = new Date(startDate);
             const end = new Date(endDate);
             const diffTime = end - start;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            
-            // Minimal sewa 1 hari
             if (diffDays > 0) {
                 setDuration(diffDays);
             } else {
-                setDuration(1); // Jika tanggal sama atau mundur, anggap 1 hari
+                setDuration(1); 
             }
         }
     }, [startDate, endDate]);
 
-    // --- KALKULASI BIAYA ---
     const serviceFee = 2000;
     const shippingCost = shippingMethod === 'instant' ? 15000 : 0;
-    // Total Harga Barang = Harga Harian * Durasi
     const totalItemPrice = baseTotalPrice * duration;
     const grandTotal = totalItemPrice + shippingCost + serviceFee;
 
     const handleCheckout = (e) => {
         e.preventDefault();
-        
         if (!startDate || !endDate) {
             alert("Mohon pilih tanggal mulai dan selesai sewa.");
             return;
@@ -82,25 +79,40 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
 
     const handleFinishPayment = () => {
         setIsProcessing(true);
-        
-        const newOrder = {
-            id: orderId,
-            date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-            items: [...cart],
-            total: grandTotal,
-            status: 'Menunggu Pengiriman',
-            shipping: shippingMethod === 'instant' ? 'Kurir Instan' : 'Ambil Sendiri',
-            paymentMethod: paymentCategory === 'qris' ? 'QRIS' : (paymentCategory === 'bca' ? selectedBank.name : selectedWallet.name),
-            duration: duration, // Simpan durasi
-            startDate: startDate,
-            endDate: endDate
-        };
+        setPaymentError(false); // Reset error sebelum mencoba
+
+        // SIMULASI PELUANG ERROR 30%
+        // Ubah angka ini jika ingin lebih sering error atau sukses
+        const isSuccess = Math.random() > 0.3; 
 
         setTimeout(() => {
             setIsProcessing(false);
-            addOrder(newOrder); 
-            alert("Pembayaran Terkonfirmasi! Pesanan Anda sedang diproses.");
-            onPaymentSuccess(); 
+            
+            if (isSuccess) {
+                // Skenario Sukses: Arahkan ke Halaman Sukses
+                const newOrder = {
+                    id: orderId,
+                    date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+                    items: [...cart],
+                    total: grandTotal,
+                    status: 'Menunggu Pengiriman',
+                    shipping: shippingMethod === 'instant' ? 'Kurir Instan' : 'Ambil Sendiri',
+                    paymentMethod: paymentCategory === 'qris' ? 'QRIS' : (paymentCategory === 'bca' ? selectedBank.name : selectedWallet.name),
+                    duration: duration, 
+                    startDate: startDate,
+                    endDate: endDate,
+                    shippingCost: shippingCost
+                };
+
+                addOrder(newOrder); 
+                // Arahkan ke halaman Order Success (bukan langsung ke riwayat)
+                onPaymentSuccess(); 
+
+            } else {
+                // Skenario Gagal
+                setPaymentError(true);
+            }
+
         }, 2000);
     };
 
@@ -151,6 +163,7 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
 
             <div className="container mx-auto px-6 py-8 md:py-12">
                 
+                {/* === TAMPILAN 1: FORM DATA (Checkout) === */}
                 {step === 'details' && (
                     <form onSubmit={handleCheckout} className="grid lg:grid-cols-12 gap-12 items-start">
                         
@@ -173,7 +186,7 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                 </div>
                             </section>
 
-                            {/* 2. DURASI SEWA (FITUR BARU) */}
+                            {/* 2. DURASI SEWA */}
                             <section className="pt-8 border-t border-slate-100">
                                 <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
                                     <span className="w-8 h-8 rounded-full bg-slate-900 text-[#14e9ff] flex items-center justify-center text-sm font-bold">2</span>
@@ -209,57 +222,56 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                 </div>
                             </section>
 
-                            {/* 3. METODE PENGIRIMAN & PEMBAYARAN */}
+                            {/* 3. METODE PENGIRIMAN */}
                             <section className="pt-8 border-t border-slate-100">
                                 <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
                                     <span className="w-8 h-8 rounded-full bg-slate-900 text-[#14e9ff] flex items-center justify-center text-sm font-bold">3</span>
-                                    Pengiriman & Pembayaran
+                                    Pengiriman
                                 </h2>
-                                
-                                {/* Pengiriman */}
-                                <div className="mb-8">
-                                    <h3 className="font-bold text-sm text-slate-900 mb-4 flex items-center gap-2">
-                                        <Truck size={18} /> Metode Pengiriman
-                                    </h3>
-                                    <div className="space-y-3">
-                                        <label 
-                                            className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition ${shippingMethod === 'instant' ? 'border-[#14e9ff] bg-[#14e9ff]/5 ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}
-                                            onClick={() => setShippingMethod('instant')}
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <input type="radio" checked={shippingMethod === 'instant'} onChange={() => setShippingMethod('instant')} className="accent-[#14e9ff] w-5 h-5" />
-                                                <div>
-                                                    <p className="font-bold text-sm text-slate-900">Kurir Instan (Rentify Express)</p>
-                                                    <p className="text-xs text-slate-500 mt-0.5">Estimasi: 2-3 jam</p>
-                                                </div>
+                                <div className="space-y-3">
+                                    <label 
+                                        className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition ${shippingMethod === 'instant' ? 'border-[#14e9ff] bg-[#14e9ff]/5 ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}
+                                        onClick={() => setShippingMethod('instant')}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <input type="radio" checked={shippingMethod === 'instant'} onChange={() => setShippingMethod('instant')} className="accent-[#14e9ff] w-5 h-5" />
+                                            <div>
+                                                <p className="font-bold text-sm text-slate-900">Kurir Instan (Rentify Express)</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">Estimasi: 2-3 jam</p>
                                             </div>
-                                            <span className="font-bold text-sm text-slate-900">{formatCurrency(15000)}</span>
-                                        </label>
-                                        <label 
-                                            className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition ${shippingMethod === 'pickup' ? 'border-[#14e9ff] bg-[#14e9ff]/5 ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}
-                                            onClick={() => setShippingMethod('pickup')}
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <input type="radio" checked={shippingMethod === 'pickup'} onChange={() => setShippingMethod('pickup')} className="accent-[#14e9ff] w-5 h-5" />
-                                                <div>
-                                                    <p className="font-bold text-sm text-slate-900">Ambil Sendiri (Self Pickup)</p>
-                                                    <p className="text-xs text-slate-500 mt-0.5">Ambil di lokasi pemilik barang</p>
-                                                </div>
+                                        </div>
+                                        <span className="font-bold text-sm text-slate-900">{formatCurrency(15000)}</span>
+                                    </label>
+                                    <label 
+                                        className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition ${shippingMethod === 'pickup' ? 'border-[#14e9ff] bg-[#14e9ff]/5 ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}
+                                        onClick={() => setShippingMethod('pickup')}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <input type="radio" checked={shippingMethod === 'pickup'} onChange={() => setShippingMethod('pickup')} className="accent-[#14e9ff] w-5 h-5" />
+                                            <div>
+                                                <p className="font-bold text-sm text-slate-900">Ambil Sendiri (Self Pickup)</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">Ambil di lokasi pemilik barang</p>
                                             </div>
-                                            <span className="font-bold text-xs text-green-700 bg-green-100 px-2 py-1 rounded">GRATIS</span>
-                                        </label>
-                                    </div>
+                                        </div>
+                                        <span className="font-bold text-xs text-green-700 bg-green-100 px-2 py-1 rounded">GRATIS</span>
+                                    </label>
                                 </div>
+                            </section>
 
-                                {/* Pembayaran Tabs */}
+                            {/* 4. METODE PEMBAYARAN */}
+                            <section className="pt-8 border-t border-slate-100">
+                                <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-slate-900 text-[#14e9ff] flex items-center justify-center text-sm font-bold">4</span>
+                                    Pembayaran
+                                </h2>
                                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
-                                    <button type="button" onClick={() => setPaymentCategory('bca')} className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap border transition ${paymentCategory === 'bca' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                                    <button type="button" onClick={() => setPaymentCategory('bca')} className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap border transition ${paymentCategory === 'bca' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}>
                                         <CreditCard size={18} /> Transfer Bank
                                     </button>
-                                    <button type="button" onClick={() => setPaymentCategory('qris')} className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap border transition ${paymentCategory === 'qris' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                                    <button type="button" onClick={() => setPaymentCategory('qris')} className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap border transition ${paymentCategory === 'qris' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}>
                                         <QrCode size={18} /> QRIS
                                     </button>
-                                    <button type="button" onClick={() => setPaymentCategory('ewallet')} className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap border transition ${paymentCategory === 'ewallet' ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                                    <button type="button" onClick={() => setPaymentCategory('ewallet')} className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap border transition ${paymentCategory === 'ewallet' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}>
                                         <Wallet size={18} /> E-Wallet
                                     </button>
                                 </div>
@@ -268,7 +280,7 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                     {paymentCategory === 'bca' && (
                                         <div className="space-y-3">
                                             {BANKS.map((bank) => (
-                                                <label key={bank.id} onClick={() => setSelectedBank(bank)} className={`flex items-center justify-between p-4 bg-white border rounded-xl cursor-pointer transition ${selectedBank.id === bank.id ? 'border-[#14e9ff] ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}>
+                                                <label key={bank.id} onClick={() => setSelectedBank(bank)} className={`flex items-center justify-between p-4 bg-white border rounded-xl cursor-pointer transition ${selectedBank.id === bank.id ? 'border-[#14e9ff] ring-1 ring-[#14e9ff]' : 'border-slate-200'}`}>
                                                     <div className="flex items-center gap-4">
                                                         <img src={bank.logo} alt={bank.name} className="h-6 w-12 object-contain" />
                                                         <span className="text-sm font-bold text-slate-700">{bank.name}</span>
@@ -289,13 +301,12 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                                 </div>
                                             </div>
                                             <p className="text-sm font-bold text-slate-800">Scan dengan aplikasi pembayaran apa saja.</p>
-                                            <p className="text-xs text-slate-500 mt-1">GoPay, OVO, Dana, ShopeePay, BCA Mobile, dll.</p>
                                         </div>
                                     )}
                                     {paymentCategory === 'ewallet' && (
                                         <div className="space-y-3">
                                             {WALLETS.map((wallet) => (
-                                                <label key={wallet.id} onClick={() => setSelectedWallet(wallet)} className={`flex items-center justify-between p-4 bg-white border rounded-xl cursor-pointer transition ${selectedWallet.id === wallet.id ? 'border-[#14e9ff] ring-1 ring-[#14e9ff]' : 'border-slate-200 hover:border-slate-300'}`}>
+                                                <label key={wallet.id} onClick={() => setSelectedWallet(wallet)} className={`flex items-center justify-between p-4 bg-white border rounded-xl cursor-pointer transition ${selectedWallet.id === wallet.id ? 'border-[#14e9ff] ring-1 ring-[#14e9ff]' : 'border-slate-200'}`}>
                                                     <div className="flex items-center gap-4">
                                                         <img src={wallet.logo} alt={wallet.name} className="h-6 w-12 object-contain" />
                                                         <span className="text-sm font-bold text-slate-700">{wallet.name}</span>
@@ -321,10 +332,13 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                 <div className="space-y-4 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
                                     {cart.map((item, idx) => (
                                         <div key={idx} className="flex gap-4">
-                                            <img src={item.imageUrl} className="w-14 h-14 rounded-lg bg-white object-cover border border-slate-100" alt="" />
+                                            <img 
+                                                src={item.imageUrl || 'https://placehold.co/100x100/e0f7fa/00bcd4?text=Item'} 
+                                                className="w-14 h-14 rounded-lg bg-white object-cover border border-slate-100" 
+                                                alt={item.name} 
+                                            />
                                             <div className="flex-1">
                                                 <p className="text-sm font-bold text-slate-800 line-clamp-1">{item.name}</p>
-                                                {/* Tampilkan durasi sewa di ringkasan */}
                                                 <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                                                     <Calendar size={12} /> {duration} Hari
                                                 </p>
@@ -361,16 +375,9 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                     <button 
                                         type="submit" 
                                         disabled={isProcessing}
-                                        className="w-full py-4 rounded-xl font-bold text-lg bg-slate-900 text-[#14e9ff] hover:bg-slate-800 shadow-lg shadow-slate-900/20 transition mt-4 flex justify-center items-center gap-2 transform active:scale-95"
+                                        className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 ${paymentError ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/20' : 'bg-slate-900 text-[#14e9ff] hover:bg-slate-800 shadow-slate-900/20'}`}
                                     >
-                                        {isProcessing ? (
-                                            <>
-                                                <div className="w-5 h-5 border-2 border-[#14e9ff] border-t-transparent rounded-full animate-spin"></div>
-                                                Memproses...
-                                            </>
-                                        ) : (
-                                            'Bayar Sekarang'
-                                        )}
+                                        {isProcessing ? 'Memproses...' : (paymentError ? <><RefreshCw size={20} /> Coba Bayar Lagi</> : 'Saya Sudah Bayar')}
                                     </button>
                                 </div>
                             </div>
@@ -378,7 +385,7 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                     </form>
                 )}
 
-                {/* === TAMPILAN 2: INSTRUKSI PEMBAYARAN (Page Baru setelah klik Bayar) === */}
+                {/* === TAMPILAN 2: INSTRUKSI PEMBAYARAN === */}
                 {step === 'payment' && (
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
@@ -386,20 +393,29 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                         className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden"
                     >
                         {/* Header Instruksi */}
-                        <div className="bg-slate-900 p-8 text-center relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-full bg-[#14e9ff] opacity-10"></div>
-                            <p className="text-slate-400 text-sm font-medium mb-1 relative z-10">Total Pembayaran</p>
-                            <h2 className="text-4xl font-black text-white relative z-10">{formatCurrency(grandTotal)}</h2>
-                            <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full text-xs text-[#14e9ff] mt-4 font-bold relative z-10">
-                                <Clock size={14} /> Bayar sebelum 24 Jam
+                        {paymentError ? (
+                             <div className="bg-red-500 p-8 text-center relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-full bg-white opacity-10"></div>
+                                <h2 className="text-2xl font-black text-white relative z-10 mb-2 flex items-center justify-center gap-2">
+                                    <AlertTriangle size={28} /> Transaksi Gagal
+                                </h2>
+                                <p className="text-white/80 text-sm relative z-10">Tenang, transaksi kamu aman. Kita bantu ulangi.</p>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="bg-slate-900 p-8 text-center relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-full bg-[#14e9ff] opacity-10"></div>
+                                <p className="text-slate-400 text-sm font-medium mb-1 relative z-10">Total Pembayaran</p>
+                                <h2 className="text-4xl font-black text-white relative z-10">{formatCurrency(grandTotal)}</h2>
+                                <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full text-xs text-[#14e9ff] mt-4 font-bold relative z-10">
+                                    <Clock size={14} /> Bayar sebelum 24 Jam
+                                </div>
+                            </div>
+                        )}
 
                         {/* Konten Instruksi */}
                         <div className="p-8">
                             
-                            {/* A. TAMPILAN QRIS */}
-                            {paymentCategory === 'qris' && (
+                            {!paymentError && paymentCategory === 'qris' && (
                                 <div className="text-center">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" className="h-10 mx-auto mb-6" />
                                     <div className="w-64 h-64 mx-auto bg-white p-2 border-2 border-slate-200 rounded-xl shadow-inner mb-6 relative">
@@ -415,8 +431,7 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                 </div>
                             )}
 
-                            {/* B. TAMPILAN BANK TRANSFER & E-WALLET */}
-                            {paymentCategory !== 'qris' && (
+                            {!paymentError && paymentCategory !== 'qris' && (
                                 <div>
                                     <div className="flex items-center justify-between mb-6">
                                         <span className="text-slate-500 font-medium">Metode Pembayaran</span>
@@ -438,23 +453,6 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                             </button>
                                         </div>
                                     </div>
-
-                                    {/* Instruksi Accordion */}
-                                    <div className="space-y-4">
-                                        <details className="group border-b border-slate-100 pb-4 cursor-pointer">
-                                            <summary className="flex justify-between items-center font-bold text-slate-700 list-none text-sm">
-                                                Cara Bayar
-                                                <ChevronRight size={16} className="group-open:rotate-90 transition" />
-                                            </summary>
-                                            <p className="text-sm text-slate-500 mt-2 leading-relaxed pl-4 border-l-2 border-slate-200 ml-1">
-                                                1. Buka aplikasi pembayaran.<br/>
-                                                2. Pilih menu Transfer / Bayar.<br/>
-                                                3. Masukkan nomor: <b>{virtualNumber}</b>.<br/>
-                                                4. Periksa nominal <b>{formatCurrency(grandTotal)}</b>.<br/>
-                                                5. Masukkan PIN untuk konfirmasi.
-                                            </p>
-                                        </details>
-                                    </div>
                                 </div>
                             )}
 
@@ -463,9 +461,9 @@ const CheckoutPage = ({ onBack, onPaymentSuccess }) => {
                                 <button 
                                     onClick={handleFinishPayment}
                                     disabled={isProcessing}
-                                    className="w-full bg-[#14e9ff] text-slate-900 py-4 rounded-xl font-bold text-lg hover:bg-[#00d0e6] shadow-lg shadow-[#14e9ff]/20 transition flex items-center justify-center gap-2 transform active:scale-95"
+                                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 ${paymentError ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/20' : 'bg-slate-900 text-[#14e9ff] hover:bg-slate-800 shadow-slate-900/20'}`}
                                 >
-                                    {isProcessing ? 'Mengecek Pembayaran...' : 'Saya Sudah Bayar'}
+                                    {isProcessing ? 'Memproses...' : (paymentError ? <><RefreshCw size={20} /> Coba Bayar Lagi</> : 'Saya Sudah Bayar')}
                                 </button>
                                 <button 
                                     onClick={() => setStep('details')}
