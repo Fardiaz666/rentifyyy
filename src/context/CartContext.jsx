@@ -1,15 +1,14 @@
 import React, { createContext, useState } from 'react';
-// Pastikan path ke mockData benar
-import { INITIAL_PRODUCTS } from '../data/mockData'; 
+import { INITIAL_PRODUCTS, mockReviews } from '../data/mockData'; 
 
 export const CartContext = createContext();
 
 // --- DATA AWAL (INITIAL STATE) ---
 
-// Data dummy untuk Pembeli (Riwayat yang sudah terjadi)
+// 1. Data dummy untuk Pembeli
 const INITIAL_BUYER_ORDERS = [
     { 
-        id: 'B-1005', 
+        id: 'ORD-101', 
         date: '10 Jan 2025', 
         status: 'Selesai & Dana Cair', 
         total: 180000, 
@@ -22,14 +21,13 @@ const INITIAL_BUYER_ORDERS = [
                 id: '1',
                 name: 'Stroller Doona+ (Car Seat & Stroller)', 
                 pricePerDay: 150000, 
-                // Gunakan URL placeholder jika gambar lokal belum siap
                 imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800',
                 location: 'Jakarta Selatan'
             }
         ],
     },
     { 
-        id: 'B-1004', 
+        id: 'ORD-102', 
         date: '15 Jan 2025', 
         status: 'Menunggu Penerimaan', 
         total: 400000, 
@@ -37,7 +35,7 @@ const INITIAL_BUYER_ORDERS = [
         shipping: 'Ambil Sendiri',
         paymentMethod: 'E-Wallet',
         shippingCost: 0,
-        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE' },
+        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE Regular' },
         items: [
             {
                 id: '2',
@@ -50,11 +48,27 @@ const INITIAL_BUYER_ORDERS = [
     },
 ];
 
-// Data dummy untuk Seller (Pesanan Masuk)
+// 2. Data dummy untuk Seller (Pesanan Masuk)
+// UPDATE: Menambahkan properti 'imageUrl' agar bisa tampil di dashboard seller
 const INITIAL_SELLER_ORDERS = [
+    { 
+        id: 'ORD-102', 
+        item: 'Paket Sony A7III + Lensa G-Master', 
+        // Tambahkan URL gambar di sini
+        imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800',
+        customer: 'John Doe (Pembeli)', 
+        date: '15 Jan 2025', 
+        status: 'Menunggu Penerimaan', 
+        total: 400000, 
+        location: 'Tangerang Selatan', 
+        due: 'Barang Kembali',
+        returnDetails: { resi: 'JNE-KMR123', courier: 'JNE Regular' }
+    },
     { 
         id: 'INV-103', 
         item: 'Sony A7III + Lensa GM', 
+        // Tambahkan URL gambar di sini
+        imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800',
         customer: 'Budi Santoso', 
         date: '8 Des 2025', 
         status: 'Menunggu Konfirmasi', 
@@ -62,82 +76,59 @@ const INITIAL_SELLER_ORDERS = [
         location: 'Tangerang Selatan', 
         due: '12 Jam' 
     },
-    { 
-        id: 'INV-102', 
-        item: 'Kursi Futura + Cover (20 Pcs)', 
-        customer: 'Ibu Rina', 
-        date: '7 Des 2025', 
-        status: 'Siap Dikirim', 
-        total: 100000, 
-        location: 'Bekasi', 
-        due: 'Besok' 
-    },
 ];
 
 export const CartProvider = ({ children }) => {
-    // --- Global Product State ---
     const [allProducts, setAllProducts] = useState(INITIAL_PRODUCTS || []);
     
-    // --- Buyer State ---
     const [cart, setCart] = useState([]);
     const [orders, setOrders] = useState(INITIAL_BUYER_ORDERS); 
-
-    // --- Seller State ---
     const [sellerOrders, setSellerOrders] = useState(INITIAL_SELLER_ORDERS); 
-
-    // --- Actions ---
 
     const addToCart = (product) => {
         setCart((prevCart) => [...prevCart, product]);
-        // Simple Toast (Optional)
-        // console.log(`${product.name} added to cart`);
     };
 
     const removeFromCart = (indexToRemove) => {
         setCart((prevCart) => prevCart.filter((_, index) => index !== indexToRemove));
     };
 
-    // FUNGSI CHECKOUT
     const addOrder = (orderData) => {
-        // 1. Masukkan ke Riwayat Pembeli
         setOrders((prev) => [orderData, ...prev]);
         
-        // 2. Masukkan ke Pesanan Masuk Penjual (Simulasi sinkronisasi)
+        // Saat buyer checkout, kita buat data untuk seller
+        // Pastikan kita mengambil gambar dari item pertama
+        const firstItemImage = orderData.items.length > 0 ? orderData.items[0].imageUrl : 'https://placehold.co/100x100?text=No+Image';
+
         const newSellerOrder = {
             id: orderData.id,
-            item: orderData.items.length > 1 ? `${orderData.items[0].name} (+${orderData.items.length - 1} lainnya)` : orderData.items[0].name,
+            item: orderData.items.length > 0 ? orderData.items[0].name : 'Barang Sewaan',
+            // Simpan URL gambar ke data seller order
+            imageUrl: firstItemImage, 
             customer: "Anda (Demo)", 
             date: orderData.date,
             status: 'Menunggu Konfirmasi', 
             total: orderData.total,
-            location: orderData.items[0].location || 'Lokasi Pembeli',
+            location: orderData.items.length > 0 ? (orderData.items[0].location || 'Lokasi Pembeli') : 'Lokasi Pembeli',
             due: '24 Jam',
             shipping: orderData.shipping,
             paymentMethod: orderData.paymentMethod
         };
 
         setSellerOrders((prev) => [newSellerOrder, ...prev]);
-        
-        // 3. Kosongkan Keranjang
         setCart([]);
     };
     
-    // --- FUNGSI PENGEMBALIAN BARANG ---
-    
-    // Pembeli: Kirim Balik Barang
+    // --- FUNGSI LAINNYA TETAP SAMA ---
     const markOrderAsReturned = (orderId, returnDetails) => {
         setOrders((prev) => prev.map(order => 
             order.id === orderId ? { ...order, status: 'Menunggu Penerimaan', returnDetails } : order
         ));
-        // Sinkronisasi ke Seller (agar seller tau barang sedang dikirim balik)
-        // Cari order seller yang ID-nya sama (jika ada, karena ID di dummy kadang beda)
-        // Di aplikasi nyata, ID pasti sama. Di sini kita update logika sellerOrders juga.
         setSellerOrders((prev) => prev.map(order => 
             order.id === orderId ? { ...order, status: 'Menunggu Penerimaan', returnDetails } : order
         ));
     };
 
-    // Penjual: Konfirmasi Barang Diterima
     const confirmOrderReceived = (orderId) => {
         setOrders((prev) => prev.map(order => 
             order.id === orderId ? { ...order, status: 'Selesai & Dana Cair' } : order
@@ -147,16 +138,15 @@ export const CartProvider = ({ children }) => {
         ));
     };
     
-    // --- Manajemen Produk (Seller) ---
     const addProduct = (newProduct) => {
         const newId = (allProducts.length + 1).toString();
         const productWithId = { 
             ...newProduct, 
             id: newId, 
-            rating: 5.0, // Default rating
+            rating: 5.0, 
             reviews: 0, 
             availability: newProduct.stock > 0,
-            imageUrl: newProduct.imageUrl || 'https://placehold.co/400x300/e0f7fa/00bcd4?text=Produk+Baru', // Fallback image
+            imageUrl: newProduct.imageUrl || 'https://placehold.co/400x300/e0f7fa/00bcd4?text=Produk+Baru', 
             specs: { 'Dibuat': new Date().toLocaleDateString('id-ID') } 
         };
         setAllProducts((prev) => [productWithId, ...prev]); 
@@ -172,12 +162,10 @@ export const CartProvider = ({ children }) => {
         setAllProducts((prev) => prev.filter(p => p.id !== productId));
     };
 
-    // Manajemen Order Seller (Terima/Tolak/Input Resi)
     const updateSellerOrderStatus = (orderId, newStatus) => {
         setSellerOrders((prev) => prev.map(order => 
             order.id === orderId ? { ...order, status: newStatus } : order
         ));
-        // Sinkronisasi ke Buyer (opsional untuk simulasi)
         setOrders((prev) => prev.map(order => 
             order.id === orderId ? { ...order, status: newStatus } : order
         ));
@@ -187,11 +175,8 @@ export const CartProvider = ({ children }) => {
 
     return (
         <CartContext.Provider value={{ 
-            // Buyer
             cart, addToCart, removeFromCart, totalPrice, 
             orders, addOrder, markOrderAsReturned, 
-            
-            // Seller
             allProducts, addProduct, updateProduct, deleteProduct, 
             sellerOrders, updateSellerOrderStatus, confirmOrderReceived
         }}>
