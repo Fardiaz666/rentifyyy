@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Clock, CheckCircle, MapPin, Truck, ArrowLeft, ShoppingBag, Eye, X, Send, XCircle, Copy, Phone, User, Mail } from 'lucide-react';
+import { Package, Clock, CheckCircle, MapPin, Truck, ArrowLeft, ShoppingBag, Eye, X, Send, XCircle, Copy } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 import { CartContext } from '../context/CartContext'; // Import Context
 
@@ -63,7 +63,7 @@ const SellerOrdersPage = ({ onPageChange }) => {
     const openResiModal = (order) => {
         setSelectedOrder(order);
         setShowResiModal(true);
-        setResiInput(order.resi || ''); // Isi resi jika sudah ada
+        setResiInput(order.resi || ''); 
     };
 
     // 5. Submit Resi
@@ -88,7 +88,7 @@ const SellerOrdersPage = ({ onPageChange }) => {
         setShowResiModal(false);
     };
     
-    // Helper Copy text (diperlukan di Modal Detail)
+    // Helper Copy text
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
         alert('Disalin!');
@@ -132,8 +132,24 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                 <tr key={order.id} className="hover:bg-slate-50/50 transition">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
-                                                <ShoppingBag size={18} />
+                                            {/* UPDATE: Tampilkan Gambar Produk dari URL */}
+                                            <div className="w-12 h-12 bg-slate-100 rounded-lg flex-shrink-0 overflow-hidden border border-slate-200">
+                                                {order.imageUrl ? (
+                                                    <img 
+                                                        src={order.imageUrl} 
+                                                        alt={order.item} 
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            // Fallback image jika gagal load
+                                                            e.target.src = 'https://placehold.co/100x100/e0f7fa/00bcd4?text=IMG';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="flex items-center justify-center h-full text-slate-400">
+                                                        <ShoppingBag size={18} />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-900 line-clamp-1 w-48">{order.item}</p>
@@ -157,7 +173,7 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-2">
                                             
-                                            {/* KONDISI 1: Menunggu Konfirmasi */}
+                                            {/* Logic Tombol Aksi Berdasarkan Status */}
                                             {order.status === 'Menunggu Konfirmasi' && (
                                                 <>
                                                     <button 
@@ -177,7 +193,6 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                                 </>
                                             )}
 
-                                            {/* KONDISI 2: Siap Dikirim */}
                                             {order.status === 'Siap Dikirim' && (
                                                 <button 
                                                     onClick={() => openResiModal(order)}
@@ -187,7 +202,6 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                                 </button>
                                             )}
                                             
-                                            {/* KONDISI 3: Menunggu Penerimaan */}
                                             {order.status === 'Menunggu Penerimaan' && (
                                                 <button 
                                                     onClick={() => handleConfirmReceived(order.id)}
@@ -233,97 +247,61 @@ const SellerOrdersPage = ({ onPageChange }) => {
                                 <h3 className="font-black text-slate-900 text-lg">Detail Pesanan {selectedOrder.id}</h3>
                                 <button onClick={closeModals}><X size={20} className="text-slate-400 hover:text-slate-900" /></button>
                             </div>
-                            
-                            <div className="p-6 space-y-6 text-sm max-h-[70vh] overflow-y-auto">
+                            <div className="p-6 space-y-4 text-sm max-h-[70vh] overflow-y-auto">
                                 
-                                {/* Status Terkini */}
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    <p className="text-xs text-slate-400 uppercase font-bold mb-1">Status Saat Ini</p>
-                                    <p className={`font-bold text-base ${getStatusColor(selectedOrder.status)} inline-block px-2 py-0.5 rounded`}>
+                                <div className="flex justify-center mb-4">
+                                     {/* GAMBAR DETAIL DI MODAL */}
+                                     <img 
+                                        src={selectedOrder.imageUrl || 'https://placehold.co/300x200/e0f7fa/00bcd4?text=Gambar+Produk'} 
+                                        alt={selectedOrder.item} 
+                                        className="w-full h-40 object-cover rounded-xl border border-slate-100"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/300x200/e0f7fa/00bcd4?text=Error'; }}
+                                    />
+                                </div>
+
+                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <p className="text-xs text-slate-400 uppercase font-bold">Status Saat Ini</p>
+                                    <p className={`font-bold text-base mt-1 ${getStatusColor(selectedOrder.status)}`}>
                                         {selectedOrder.status}
                                     </p>
                                     {selectedOrder.status === 'Menunggu Penerimaan' && (
-                                        <div className="mt-3 text-xs text-orange-600 font-medium bg-orange-50 p-2 rounded border border-orange-100 flex items-center gap-2">
-                                            <Truck size={16} /> 
-                                            <span>Barang sedang dikembalikan. Cek fisik saat sampai.</span>
+                                        <div className="mt-2 text-xs text-orange-600 font-medium flex items-center gap-1">
+                                            <Truck size={14} /> Barang dalam perjalanan kembali
                                         </div>
                                     )}
                                 </div>
 
-                                {/* --- INFORMASI PENYEWA (FITUR BARU) --- */}
                                 <div>
-                                    <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
-                                        <User size={16} className="text-[#14e9ff]" /> Informasi Penyewa
-                                    </h4>
-                                    <div className="space-y-3 pl-1">
-                                        <div>
-                                            <p className="text-xs text-slate-400 font-bold mb-0.5">Nama Lengkap</p>
-                                            <p className="font-medium text-slate-800">{selectedOrder.customer}</p>
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <div className="flex-1">
-                                                <p className="text-xs text-slate-400 font-bold mb-0.5 flex items-center gap-1"><Phone size={10}/> Telepon / WA</p>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-medium text-slate-800">{selectedOrder.phone || '0812-3456-7890'}</p>
-                                                    <button onClick={() => copyToClipboard(selectedOrder.phone || '0812-3456-7890')} className="text-[#14e9ff] hover:text-blue-600"><Copy size={12}/></button>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-xs text-slate-400 font-bold mb-0.5 flex items-center gap-1"><Mail size={10}/> Email</p>
-                                                <p className="font-medium text-slate-800 text-xs mt-0.5">customer@email.com</p>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-400 font-bold mb-1 flex items-center gap-1"><MapPin size={10}/> Alamat Pengiriman</p>
-                                            <p className="text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs">
-                                                {selectedOrder.location || 'Jl. Jendral Sudirman No. 1, Jakarta Selatan, 12190 (Alamat Lengkap)'}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    <p className="text-xs text-slate-400 uppercase font-bold">Total & Pembayaran</p>
+                                    <p className="font-bold text-base text-[#00c0d4]">{formatCurrency(selectedOrder.total)}</p>
+                                    <p className="text-slate-500">Metode: Transfer Bank</p>
                                 </div>
-
-                                {/* Detail Pembayaran */}
+                                
                                 <div>
-                                    <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
-                                        <ShoppingBag size={16} className="text-[#14e9ff]" /> Rincian Transaksi
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-4 pl-1">
-                                        <div>
-                                            <p className="text-xs text-slate-400 font-bold">Total Biaya</p>
-                                            <p className="font-bold text-base text-[#00c0d4]">{formatCurrency(selectedOrder.total)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-400 font-bold">Metode Bayar</p>
-                                            <p className="text-slate-600 text-sm">Transfer Bank</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-400 font-bold">Kurir Pilihan</p>
-                                            <p className="text-slate-900 font-medium text-sm">{selectedOrder.shipping || 'Instan'}</p>
-                                        </div>
-                                    </div>
+                                    <p className="text-xs text-slate-400 uppercase font-bold">Penyewa</p>
+                                    <p className="font-bold text-slate-900">{selectedOrder.customer}</p>
+                                    <p className="text-slate-500">{selectedOrder.phone || '-'}</p>
                                 </div>
                                 
                                 {/* Detail Bukti Pengiriman (Resi/Kurir) */}
                                 {(selectedOrder.resi || selectedOrder.returnDetails) && (
-                                     <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mt-2">
-                                        <p className="text-xs text-blue-600 uppercase font-bold mb-2 flex items-center gap-1"><Truck size={12}/> Bukti Pengiriman</p>
-                                        <div className="flex justify-between items-center bg-white p-2 rounded border border-blue-100">
-                                            <span className="font-mono font-bold text-blue-900 text-sm tracking-wider">
-                                                {selectedOrder.resi || selectedOrder.returnDetails?.resi || 'N/A'}
-                                            </span>
-                                            <button onClick={() => copyToClipboard(selectedOrder.resi || selectedOrder.returnDetails?.resi || '')} className="text-blue-400 hover:text-blue-600">
-                                                <Copy size={16} />
+                                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                        <p className="text-xs text-blue-600 uppercase font-bold mb-1">Bukti Pengiriman</p>
+                                        <p className="font-bold text-blue-900 text-sm flex items-center gap-2">
+                                            Resi: {selectedOrder.resi || selectedOrder.returnDetails?.resi || 'N/A'} 
+                                            <button onClick={() => copyToClipboard(selectedOrder.resi || selectedOrder.returnDetails?.resi || '')} className="text-blue-500 hover:text-blue-700">
+                                                <Copy size={14} />
                                             </button>
-                                        </div>
-                                        <p className="text-xs text-blue-500 mt-1">
+                                        </p>
+                                        <p className="text-xs text-blue-600">
                                             Kurir: {selectedOrder.shipping || selectedOrder.returnDetails?.courier || 'N/A'}
                                         </p>
                                     </div>
                                 )}
                                 
                             </div>
-                            <div className="p-4 border-t border-slate-100 flex justify-end bg-slate-50">
-                                <button onClick={closeModals} className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition shadow-lg">Tutup</button>
+                            <div className="p-4 border-t border-slate-100 flex justify-end">
+                                <button onClick={closeModals} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition">Tutup</button>
                             </div>
                         </motion.div>
                     </motion.div>
